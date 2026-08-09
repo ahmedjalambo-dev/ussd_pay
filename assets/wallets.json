@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "_comment": "USSD templates live here as DATA. To add a wallet or fix a carrier code, edit this file only -- no Dart code names a specific wallet. Placeholders are {phone} and {amount}. {phone} is substituted with the 10-digit local form (0599123456). NEVER add a PIN placeholder: the PIN is entered in the carrier's own USSD prompt, never in the dialed string.",
+  "wallets": [
+    {
+      "id": "jawwalpay",
+      "name": {
+        "ar": "جوال باي",
+        "en": "JawwalPay"
+      },
+      "colorHex": "#6CA61C",
+      "icon": "assets/images/JawwalPay.png",
+      "templates": {
+        "friend": "*268*1*{phone}*{amount}#",
+        "merchant": "*268*2*{phone}*{amount}#"
+      }
+    },
+    {
+      "id": "palpay",
+      "name": {
+        "ar": "بال باي",
+        "en": "PalPay"
+      },
+      "colorHex": "#63247F",
+      "icon": "assets/images/PalPay.png",
+      "templates": {
+        "friend": "*370*1*1*{phone}*{amount}#",
+        "merchant": "*370*2*1*{phone}*{amount}#"
+      }
+    }
+  ]
+}

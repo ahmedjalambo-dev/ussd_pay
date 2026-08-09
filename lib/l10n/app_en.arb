@@ -1,0 +1,88 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "USSD Pay",
+  "chooseWallet": "Choose a wallet",
+  "chooseWalletSubtitle": "Pick the wallet you are paying from.",
+  "navHome": "Pay",
+  "navFavorites": "Favorites",
+  "navHistory": "History",
+  "settings": "Settings",
+
+  "recipientTypeQuestion": "Who are you paying?",
+  "recipientTypeFriend": "A friend",
+  "recipientTypeMerchant": "A merchant",
+
+  "phoneNumberLabel": "Phone number",
+  "phoneNumberHint": "059 912 3456",
+  "phoneSupportedPrefixes": "Jawwal 059 · Ooredoo 056",
+  "amountLabel": "Amount",
+  "currencySymbol": "₪",
+  "pickFromContacts": "Contacts",
+  "pickFromFavorites": "Favorites",
+
+  "reviewPayment": "Review payment",
+  "reviewPaymentHint": "Nothing is sent yet — you will check the details first.",
+  "confirmTitle": "Confirm payment",
+  "confirmSubtitle": "Check every detail before you dial. This sends real money.",
+  "walletLabel": "Wallet",
+  "recipientLabel": "Recipient",
+  "codeLabel": "Code to be dialed",
+  "callNow": "Open dialer",
+  "cancel": "Cancel",
+  "copyCode": "Copy code",
+  "codeCopied": "Code copied",
+  "pinNotice": "You will enter your wallet PIN in your carrier's own screen after dialing. USSD Pay never asks for it and never stores it.",
+
+  "warnUnknownPrefix": "This is not a Jawwal (059) or Ooredoo (056) number. Check it before you continue — you can still pay.",
+  "errorPhoneEmpty": "Enter a phone number",
+  "errorPhoneNonNumeric": "This does not contain a phone number",
+  "errorPhoneTooShort": "Too short — a number has 9 digits, starting 059 or 056",
+  "errorPhoneTooLong": "Too long — a number has 9 digits, starting 059 or 056",
+  "errorAmountRequired": "Enter an amount",
+
+  "carrierJawwal": "Jawwal",
+  "carrierOoredoo": "Ooredoo",
+
+  "dialerUnavailable": "This device cannot dial USSD codes. The code has been copied — paste it into your phone's dialer.",
+  "dialerOpened": "Press call in your dialer to send the payment",
+
+  "emptyFavoritesTitle": "No saved recipients",
+  "emptyFavoritesBody": "Save someone you pay often and their number will be one tap away.",
+  "emptyHistoryTitle": "No payments yet",
+  "emptyHistoryBody": "Payments you dial will be listed here so you can repeat them.",
+
+  "saveAsFavorite": "Save as favorite",
+  "savedAsFavorite": "Saved",
+  "favoriteNameLabel": "Name",
+  "save": "Save",
+  "delete": "Delete",
+  "deleteFavoriteTitle": "Delete this recipient?",
+  "deleteFavoriteMessage": "{name} will be removed from your favorites.",
+  "@deleteFavoriteMessage": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "repeatPayment": "Repeat",
+  "clearHistory": "Clear history",
+  "clearHistoryMessage": "All recorded payments will be deleted from this device.",
+  "clear": "Clear",
+
+  "language": "Language",
+  "languageArabic": "العربية",
+  "languageEnglish": "English",
+  "appearance": "Appearance",
+  "themeDark": "Dark",
+  "themeLight": "Light",
+  "themeSystem": "Follow system",
+
+  "about": "About",
+  "aboutOffline": "USSD Pay works entirely offline. It makes no network connections and collects nothing.",
+  "aboutNoPin": "It never asks for, stores, or dials your wallet PIN.",
+
+  "contactsPermissionDenied": "Permission to read contacts was not granted. You can still type the number.",
+  "contactHasNoNumber": "That contact has no phone number.",
+
+  "loadFailedTitle": "Wallet settings could not be read",
+  "loadFailedBody": "assets/wallets.json is missing or invalid, so no payment can be built safely.",
+  "retry": "Retry"
+}

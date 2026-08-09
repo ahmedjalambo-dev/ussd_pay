@@ -1,6 +1,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The app's only dangerous permission, requested when the user taps
+         "Contacts" and never at startup. Refusing it costs nothing: the number
+         can always be typed. There is deliberately no CALL_PHONE permission:
+         the app hands the code to the system dialer and the user presses call,
+         so the last word on sending money is always theirs. -->
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+
+    <!-- Not every target device has telephony, and the app is still useful
+         (build and copy a code) without it. -->
+    <uses-feature android:name="android.hardware.telephony" android:required="false"/>
+
     <application
-        android:label="ussd_pay"
+        android:label="USSD Pay"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -40,6 +51,12 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Android 11+ package visibility: without this, canLaunchUrl("tel:...")
+             returns false even when a dialer is installed. -->
+        <intent>
+            <action android:name="android.intent.action.DIAL"/>
+            <data android:scheme="tel"/>
         </intent>
     </queries>
 </manifest>

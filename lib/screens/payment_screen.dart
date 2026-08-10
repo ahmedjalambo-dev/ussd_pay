@@ -41,8 +41,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     _phoneController.text = draft.rawPhoneInput;
     if (draft.amountInput.isNotEmpty) {
       final amount = num.tryParse(draft.amountInput);
-      _amountController.text =
-          amount != null ? formatAmountDisplay(amount) : draft.amountInput;
+      _amountController.text = amount != null
+          ? formatAmountDisplay(amount)
+          : draft.amountInput;
     }
     _showPhoneIssue = draft.rawPhoneInput.isNotEmpty;
   }
@@ -62,10 +63,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     final contact = result.contact;
     if (contact != null) {
       _phoneController.text = contact.number;
-      ref.read(paymentDraftProvider.notifier).setRecipient(
-            phone: contact.number,
-            name: contact.name,
-          );
+      ref
+          .read(paymentDraftProvider.notifier)
+          .setRecipient(phone: contact.number, name: contact.name);
       setState(() => _showPhoneIssue = true);
       return;
     }
@@ -90,50 +90,57 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
     final chosen = await showModalBottomSheet<Favorite>(
       context: context,
-      builder: (context) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.fromLTRB(
-            AppTheme.gapMd,
-            0,
-            AppTheme.gapMd,
-            AppTheme.gapLg,
-          ),
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppTheme.gapSm,
-                0,
-                AppTheme.gapSm,
-                AppTheme.gapMd,
-              ),
-              child: Text(
-                l10n.pickFromFavorites,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+      // Re-apply the branded theme inside the sheet: the sheet is opened from
+      // State.context, which lives above the Theme wrapper in build(), so its
+      // subtree would otherwise fall back to the app-level primary.
+      builder: (context) => Theme(
+        data: AppTheme.branded(context, Color(widget.wallet.colorValue)),
+        child: SafeArea(
+          child: ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.gapMd,
+              0,
+              AppTheme.gapMd,
+              AppTheme.gapLg,
             ),
-            for (final favorite in favorites)
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundColor:
-                      Theme.of(context).colorScheme.primaryContainer,
-                  child: Icon(
-                    Icons.star_rounded,
-                    size: 22,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                  ),
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.gapSm,
+                  0,
+                  AppTheme.gapSm,
+                  AppTheme.gapMd,
                 ),
-                title: Text(favorite.name),
-                subtitle: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Directionality(
-                    textDirection: TextDirection.ltr,
-                    child: Text(formatPhoneDisplay(favorite.number)),
-                  ),
+                child: Text(
+                  l10n.pickFromFavorites,
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-                onTap: () => Navigator.of(context).pop(favorite),
               ),
-          ],
+              for (final favorite in favorites)
+                ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer,
+                    child: Icon(
+                      Icons.star_rounded,
+                      size: 22,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                  title: Text(favorite.name),
+                  subtitle: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: Text(formatPhoneDisplay(favorite.number)),
+                    ),
+                  ),
+                  onTap: () => Navigator.of(context).pop(favorite),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -216,83 +223,83 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     final draft = ref.watch(paymentDraftProvider);
     final localeCode = ref.watch(settingsProvider).locale?.languageCode ?? 'ar';
     final normalized = PhoneNormalizer.normalize(_phoneController.text);
-    final brandColor = Color(widget.wallet.colorValue);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.wallet.nameFor(localeCode)),
-        // A thin brand stripe: which wallet is being paid from should be
-        // readable at a glance, not only from the title.
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(3),
-          child: Container(height: 3, color: brandColor),
-        ),
-      ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(
-            AppTheme.screenPadding,
-            AppTheme.gapXl,
-            AppTheme.screenPadding,
-            AppTheme.gapXl,
-          ),
-          children: [
-            _Section(
-              step: '1',
-              title: l10n.recipientTypeQuestion,
-              child: RecipientTypeToggle(
-                types: widget.wallet.recipientTypes,
-                selected: draft.recipientType,
-                onChanged: (type) => ref
-                    .read(paymentDraftProvider.notifier)
-                    .setRecipientType(type),
-              ),
+    // A scoped Theme so every primary-family surface on this screen (step
+    // circles, focus rings, the Review button, the recipient-type toggle,
+    // the currency symbol) picks up the wallet's brand color. Neutrals stay
+    // the app's, so the scaffold does not flicker between wallets.
+    return Theme(
+      data: AppTheme.branded(context, Color(widget.wallet.colorValue)),
+      child: Scaffold(
+        appBar: AppBar(title: Text(widget.wallet.nameFor(localeCode))),
+        body: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.screenPadding,
+              AppTheme.gapXl,
+              AppTheme.screenPadding,
+              AppTheme.gapXl,
             ),
-            const SizedBox(height: AppTheme.gapXl),
-            _Section(
-              step: '2',
-              title: l10n.phoneNumberLabel,
-              child: PhoneField(
-                controller: _phoneController,
-                normalized: normalized,
-                recipientName: draft.recipientName,
-                showIssue: _showPhoneIssue,
-                onChanged: (value) {
-                  ref.read(paymentDraftProvider.notifier).setPhoneInput(value);
-                  setState(() => _showPhoneIssue = value.isNotEmpty);
-                },
-                onPickContact: _pickContact,
-                onPickFavorite: _pickFavorite,
-              ),
-            ),
-            const SizedBox(height: AppTheme.gapXl),
-            _Section(
-              step: '3',
-              title: l10n.amountLabel,
-              child: AmountField(
-                controller: _amountController,
-                onChanged: (value) {
-                  final amount = AmountField.parse(value);
-                  ref
+            children: [
+              _Section(
+                step: '1',
+                title: l10n.recipientTypeQuestion,
+                child: RecipientTypeToggle(
+                  types: widget.wallet.recipientTypes,
+                  selected: draft.recipientType,
+                  onChanged: (type) => ref
                       .read(paymentDraftProvider.notifier)
-                      .setAmountInput(amount?.toString() ?? '');
-                  setState(() {});
-                },
+                      .setRecipientType(type),
+                ),
               ),
-            ),
-            const SizedBox(height: AppTheme.gapXxl),
-            FilledButton.icon(
-              onPressed: _review,
-              icon: const Icon(Icons.arrow_forward_rounded),
-              label: Text(l10n.reviewPayment),
-            ),
-            const SizedBox(height: AppTheme.gapMd),
-            Text(
-              l10n.reviewPaymentHint,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall,
-            ),
-          ],
+              const SizedBox(height: AppTheme.gapXl),
+              _Section(
+                step: '2',
+                title: l10n.phoneNumberLabel,
+                child: PhoneField(
+                  controller: _phoneController,
+                  normalized: normalized,
+                  recipientName: draft.recipientName,
+                  showIssue: _showPhoneIssue,
+                  onChanged: (value) {
+                    ref
+                        .read(paymentDraftProvider.notifier)
+                        .setPhoneInput(value);
+                    setState(() => _showPhoneIssue = value.isNotEmpty);
+                  },
+                  onPickContact: _pickContact,
+                  onPickFavorite: _pickFavorite,
+                ),
+              ),
+              const SizedBox(height: AppTheme.gapXl),
+              _Section(
+                step: '3',
+                title: l10n.amountLabel,
+                child: AmountField(
+                  controller: _amountController,
+                  onChanged: (value) {
+                    final amount = AmountField.parse(value);
+                    ref
+                        .read(paymentDraftProvider.notifier)
+                        .setAmountInput(amount?.toString() ?? '');
+                    setState(() {});
+                  },
+                ),
+              ),
+              const SizedBox(height: AppTheme.gapXxl),
+              FilledButton.icon(
+                onPressed: _review,
+                icon: const Icon(Icons.arrow_forward_rounded),
+                label: Text(l10n.reviewPayment),
+              ),
+              const SizedBox(height: AppTheme.gapMd),
+              Text(
+                l10n.reviewPaymentHint,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall,
+              ),
+            ],
+          ),
         ),
       ),
     );

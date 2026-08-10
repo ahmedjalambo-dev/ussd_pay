@@ -21,7 +21,7 @@
         "ar": "بال باي",
         "en": "PalPay"
       },
-      "colorHex": "#63247F",
+      "colorHex": "#7d2ca2",
       "icon": "assets/images/PalPay.png",
       "templates": {
         "friend": "*370*1*1*{phone}*{amount}#",

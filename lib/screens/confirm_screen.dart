@@ -90,7 +90,12 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
       // favorites literally named "056 845 0493", which is no more useful than
       // the number already shown beneath it -- and, being digits in free text,
       // bidi reordered it in the list.
-      builder: (_) => SaveFavoriteDialog(initialName: widget.recipientName),
+      // The dialog is opened from State.context (above the branded Theme in
+      // build), so re-apply branding here to keep the Save button on-brand.
+      builder: (dialogContext) => Theme(
+        data: AppTheme.branded(dialogContext, Color(widget.wallet.colorValue)),
+        child: SaveFavoriteDialog(initialName: widget.recipientName),
+      ),
     );
 
     if (name == null || name.isEmpty || !mounted) return;
@@ -123,149 +128,177 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     final localeCode = ref.watch(settingsProvider).locale?.languageCode ?? 'ar';
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.confirmTitle)),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(
-            AppTheme.screenPadding,
-            AppTheme.gapMd,
-            AppTheme.screenPadding,
-            AppTheme.gapXl,
-          ),
-          children: [
-            _CautionBanner(text: l10n.confirmSubtitle),
-            const SizedBox(height: AppTheme.gapXl),
-
-            // The amount is the largest thing on the screen: it is the detail a
-            // hurried user is most likely to get wrong.
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.gapXl,
-                vertical: AppTheme.gapXxl,
-              ),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    scheme.primaryContainer,
-                    scheme.primaryContainer.withValues(alpha: 0.55),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    l10n.amountLabel,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: scheme.onPrimaryContainer.withValues(alpha: 0.8),
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.gapSm),
-                  Directionality(
-                    textDirection: TextDirection.ltr,
-                    child: Text(
-                      '${formatAmountDisplay(widget.amount)} ${l10n.currencySymbol}',
-                      style: theme.textTheme.displaySmall?.copyWith(
-                        color: scheme.onPrimaryContainer,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppTheme.gapLg),
-
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.gapLg,
-                vertical: AppTheme.gapXs,
-              ),
-              decoration: AppTheme.surface(context),
-              child: Column(
-                children: [
-                  _DetailRow(
-                    icon: Icons.person_outline_rounded,
-                    label: l10n.recipientLabel,
-                    value:
-                        widget.recipientName ??
-                        formatPhoneDisplay(widget.phone.local),
-                    secondary: widget.recipientName != null
-                        ? formatPhoneDisplay(widget.phone.local)
-                        : carrierLabel(l10n, widget.phone.carrier),
-                  ),
-                  const Divider(),
-                  _DetailRow(
-                    icon: Icons.account_balance_wallet_outlined,
-                    iconAsset: widget.wallet.iconAsset,
-                    label: l10n.walletLabel,
-                    value: widget.wallet.nameFor(localeCode),
-                    secondary: recipientTypeLabel(l10n, widget.recipientType),
-                    accent: Color(widget.wallet.colorValue),
-                  ),
-                ],
-              ),
-            ),
-
-            if (!widget.phone.isValid) ...[
-              const SizedBox(height: AppTheme.gapMd),
-              _Warning(text: l10n.warnUnknownPrefix),
-            ],
-
-            const SizedBox(height: AppTheme.gapXl),
-            Text(l10n.codeLabel, style: theme.textTheme.bodySmall),
-            const SizedBox(height: AppTheme.gapMd),
-            UssdPreview(code: widget.ussdCode),
-            const SizedBox(height: AppTheme.gapMd),
-            _PinNoticeInline(text: l10n.pinNotice),
-
-            const SizedBox(height: AppTheme.gapXxl),
-            FilledButton.icon(
-              onPressed: _dialing ? null : _dial,
-              icon: const Icon(Icons.phone_in_talk_rounded, size: 24),
-              label: Text(l10n.callNow),
-            ),
-            const SizedBox(height: AppTheme.gapMd),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () async {
-                      await DialerService.copy(widget.ussdCode);
-                      if (!context.mounted) return;
-                      _snack(l10n.codeCopied);
-                    },
-                    icon: const Icon(Icons.copy_rounded, size: 20),
-                    label: Text(l10n.copyCode, overflow: TextOverflow.ellipsis),
-                  ),
-                ),
-                const SizedBox(width: AppTheme.gapMd),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _saveFavorite,
-                    icon: const Icon(Icons.star_outline_rounded, size: 20),
-                    label: Text(
-                      l10n.saveAsFavorite,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
+    // Same scoped branding as PaymentScreen so the review step feels like it
+    // belongs to the same wallet the user just came from -- the amount hero
+    // (primaryContainer), PIN lock icon, and Call now button all rebrand.
+    //
+    // `theme`/`scheme` MUST be read from a context BELOW this Theme wrapper
+    // (via the Builder), otherwise `scheme.primaryContainer` on the amount
+    // hero resolves to the app-default primary and the card stays blue.
+    return Theme(
+      data: AppTheme.branded(context, Color(widget.wallet.colorValue)),
+      child: Builder(
+        builder: (context) {
+          final theme = Theme.of(context);
+          final scheme = theme.colorScheme;
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(l10n.confirmTitle),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(l10n.cancel),
                 ),
               ],
             ),
-            const SizedBox(height: AppTheme.gapSm),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(l10n.cancel),
+            body: SafeArea(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.screenPadding,
+                  AppTheme.gapMd,
+                  AppTheme.screenPadding,
+                  AppTheme.gapXl,
+                ),
+                children: [
+                  _CautionBanner(text: l10n.confirmSubtitle),
+                  const SizedBox(height: AppTheme.gapXl),
+
+                  // The amount is the largest thing on the screen: it is the detail a
+                  // hurried user is most likely to get wrong.
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.gapXl,
+                      vertical: AppTheme.gapXxl,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          scheme.primaryContainer,
+                          scheme.primaryContainer.withValues(alpha: 0.55),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          l10n.amountLabel,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: scheme.onPrimaryContainer.withValues(
+                              alpha: 0.8,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: AppTheme.gapSm),
+                        Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: Text(
+                            '${formatAmountDisplay(widget.amount)} ${l10n.currencySymbol}',
+                            style: theme.textTheme.displaySmall?.copyWith(
+                              color: scheme.onPrimaryContainer,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.gapLg),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.gapLg,
+                      vertical: AppTheme.gapXs,
+                    ),
+                    decoration: AppTheme.surface(context),
+                    child: Column(
+                      children: [
+                        _DetailRow(
+                          icon: Icons.person_outline_rounded,
+                          label: l10n.recipientLabel,
+                          value:
+                              widget.recipientName ??
+                              formatPhoneDisplay(widget.phone.local),
+                          secondary: widget.recipientName != null
+                              ? formatPhoneDisplay(widget.phone.local)
+                              : carrierLabel(l10n, widget.phone.carrier),
+                        ),
+                        const Divider(),
+                        _DetailRow(
+                          icon: Icons.account_balance_wallet_outlined,
+                          iconAsset: widget.wallet.iconAsset,
+                          label: l10n.walletLabel,
+                          value: widget.wallet.nameFor(localeCode),
+                          secondary: recipientTypeLabel(
+                            l10n,
+                            widget.recipientType,
+                          ),
+                          accent: Color(widget.wallet.colorValue),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  if (!widget.phone.isValid) ...[
+                    const SizedBox(height: AppTheme.gapMd),
+                    _Warning(text: l10n.warnUnknownPrefix),
+                  ],
+
+                  const SizedBox(height: AppTheme.gapXl),
+                  Text(l10n.codeLabel, style: theme.textTheme.bodySmall),
+                  const SizedBox(height: AppTheme.gapMd),
+                  UssdPreview(code: widget.ussdCode),
+                  const SizedBox(height: AppTheme.gapMd),
+                  _PinNoticeInline(text: l10n.pinNotice),
+
+                  const SizedBox(height: AppTheme.gapXxl),
+                  FilledButton.icon(
+                    onPressed: _dialing ? null : _dial,
+                    icon: const Icon(Icons.phone_in_talk_rounded, size: 24),
+                    label: Text(l10n.callNow),
+                  ),
+                  const SizedBox(height: AppTheme.gapMd),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () async {
+                            await DialerService.copy(widget.ussdCode);
+                            if (!context.mounted) return;
+                            _snack(l10n.codeCopied);
+                          },
+                          icon: const Icon(Icons.copy_rounded, size: 20),
+                          label: Text(
+                            l10n.copyCode,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppTheme.gapMd),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _saveFavorite,
+                          icon: const Icon(
+                            Icons.star_outline_rounded,
+                            size: 20,
+                          ),
+                          label: Text(
+                            l10n.saveAsFavorite,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.gapSm),
+                ],
+              ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -343,11 +376,7 @@ class _DetailRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _DetailBadge(
-            icon: icon,
-            iconColor: iconColor,
-            asset: iconAsset,
-          ),
+          _DetailBadge(icon: icon, iconColor: iconColor, asset: iconAsset),
           const SizedBox(width: AppTheme.gapMd),
           Expanded(
             child: Column(
@@ -382,11 +411,7 @@ class _DetailRow extends StatelessWidget {
 }
 
 class _DetailBadge extends StatelessWidget {
-  const _DetailBadge({
-    required this.icon,
-    required this.iconColor,
-    this.asset,
-  });
+  const _DetailBadge({required this.icon, required this.iconColor, this.asset});
 
   final IconData icon;
   final Color iconColor;

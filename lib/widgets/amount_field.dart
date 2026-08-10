@@ -63,8 +63,10 @@ class AmountField extends StatelessWidget {
                 ),
               ),
             ),
-            prefixIconConstraints:
-                const BoxConstraints(minWidth: 0, minHeight: 0),
+            prefixIconConstraints: const BoxConstraints(
+              minWidth: 0,
+              minHeight: 0,
+            ),
           ),
         ),
         const SizedBox(height: AppTheme.gapMd),
@@ -151,7 +153,9 @@ class _ThousandsSeparatorFormatter extends TextInputFormatter {
     if (!RegExp(r'^\d*\.?\d{0,2}$').hasMatch(raw)) return oldValue;
 
     final parts = raw.split('.');
-    final formatted = StringBuffer(formatAmountDisplay(int.tryParse(parts[0]) ?? 0));
+    final formatted = StringBuffer(
+      formatAmountDisplay(int.tryParse(parts[0]) ?? 0),
+    );
     if (parts[0].isEmpty) {
       formatted
         ..clear()

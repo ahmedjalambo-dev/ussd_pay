@@ -65,7 +65,9 @@ abstract final class AppTheme {
   /// sibling family. Wired as a fallback rather than swapped by locale so a
   /// screen mixing Arabic recipient names with Latin amounts still renders
   /// each script in the right family.
-  static const List<String> fontFamilyFallback = <String>['IBM Plex Sans Arabic'];
+  static const List<String> fontFamilyFallback = <String>[
+    'IBM Plex Sans Arabic',
+  ];
 
   /// A blue that reads as trustworthy next to both wallet brand colours
   /// (green and purple) without competing with either.
@@ -84,6 +86,91 @@ abstract final class AppTheme {
 
   static ThemeData light() => _build(Brightness.light);
 
+  /// A copy of the ambient theme with the full tonal palette regenerated
+  /// from [brandColor]. Primary-family surfaces (buttons, step circles, focus
+  /// rings, the `primaryContainer` hero) AND neutrals (scaffold background,
+  /// card surfaces, outlines) are all wallet-tinted, so the whole screen
+  /// feels like it belongs to that wallet. Only the amber warning color and
+  /// scheme error red are kept from the app theme.
+  ///
+  /// Wrap a screen's `Scaffold` in
+  /// `Theme(data: AppTheme.branded(context, walletColor), child: ...)`.
+  static ThemeData branded(BuildContext context, Color brandColor) {
+    final base = Theme.of(context);
+    final baseScheme = base.colorScheme;
+    // Regenerate a full M3 tonal palette from the brand color, then merge only
+    // the primary/secondary/tertiary tones back. `fromSeed` picks accessible
+    // on-colors for us, which is the whole reason to go through it rather than
+    // dropping the raw brand color into a button style.
+    final brandScheme = ColorScheme.fromSeed(
+      seedColor: brandColor,
+      brightness: baseScheme.brightness,
+      // contrastLevel: 0.3,
+    );
+    final scheme = baseScheme.copyWith(
+      primary: brandScheme.primary,
+      onPrimary: brandScheme.onPrimary,
+      primaryContainer: brandScheme.primaryContainer,
+      onPrimaryContainer: brandScheme.onPrimaryContainer,
+      secondary: brandScheme.secondary,
+      onSecondary: brandScheme.onSecondary,
+      secondaryContainer: brandScheme.secondaryContainer,
+      onSecondaryContainer: brandScheme.onSecondaryContainer,
+      tertiary: brandScheme.tertiary,
+      onTertiary: brandScheme.onTertiary,
+      tertiaryContainer: brandScheme.tertiaryContainer,
+      onTertiaryContainer: brandScheme.onTertiaryContainer,
+      inversePrimary: brandScheme.inversePrimary,
+      // Surface family: adopt the brand-tinted neutrals from fromSeed so the
+      // scaffold background and card surfaces also feel like the wallet, not
+      // just the primary-family surfaces on top of them. M3 generates these
+      // as subtly wallet-tinted dark/light neutrals -- readable, not loud.
+      // The paired on-colors must move together or text contrast breaks.
+      surface: brandScheme.surface,
+      onSurface: brandScheme.onSurface,
+      surfaceContainerLowest: brandScheme.surfaceContainerLowest,
+      surfaceContainerLow: brandScheme.surfaceContainerLow,
+      surfaceContainer: brandScheme.surfaceContainer,
+      surfaceContainerHigh: brandScheme.surfaceContainerHigh,
+      surfaceContainerHighest: brandScheme.surfaceContainerHighest,
+      onSurfaceVariant: brandScheme.onSurfaceVariant,
+      outline: brandScheme.outline,
+      outlineVariant: brandScheme.outlineVariant,
+      inverseSurface: brandScheme.inverseSurface,
+      onInverseSurface: brandScheme.onInverseSurface,
+    );
+    final isDark = scheme.brightness == Brightness.dark;
+    // Component themes that captured `scheme.primary` at build time
+    // (input focus ring, floating label, progress indicator) must be
+    // recreated against the new scheme; everything else resolves primary
+    // at paint time via `Theme.of(context)` and picks up the override on
+    // its own.
+    //
+    // scaffoldBackgroundColor and canvasColor are set in `_build` to the
+    // hard-coded `_darkSurface`/`_lightSurface` constants, so they do NOT
+    // pick up the surface swap above and must be overridden here too --
+    // otherwise the scaffold background stays the neutral dark blue while
+    // the cards on top of it are wallet-tinted, and the seam shows.
+    return base.copyWith(
+      colorScheme: scheme,
+      scaffoldBackgroundColor: scheme.surface,
+      canvasColor: scheme.surface,
+      // AppBar background was baked into the app theme against the hard-coded
+      // surface constant; rebuild it so the bar merges into the branded
+      // scaffold instead of showing a seam at the top of the screen.
+      appBarTheme: base.appBarTheme.copyWith(
+        backgroundColor: scheme.surface,
+        foregroundColor: scheme.onSurface,
+      ),
+      inputDecorationTheme: _inputDecorationTheme(
+        scheme,
+        base.textTheme,
+        isDark: isDark,
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(color: scheme.primary),
+    );
+  }
+
   /// Soft, layered shadow. Two low-alpha layers read as depth; one heavy layer
   /// reads as a drop shadow from 2010.
   static List<BoxShadow> shadow(BuildContext context) {
@@ -94,16 +181,8 @@ abstract final class AppTheme {
       return const [];
     }
     return const [
-      BoxShadow(
-        color: Color(0x0F0F172A),
-        blurRadius: 8,
-        offset: Offset(0, 2),
-      ),
-      BoxShadow(
-        color: Color(0x0A0F172A),
-        blurRadius: 2,
-        offset: Offset(0, 1),
-      ),
+      BoxShadow(color: Color(0x0F0F172A), blurRadius: 8, offset: Offset(0, 2)),
+      BoxShadow(color: Color(0x0A0F172A), blurRadius: 2, offset: Offset(0, 1)),
     ];
   }
 
@@ -150,10 +229,9 @@ abstract final class AppTheme {
     // component themes below are handed *this* local, and a style with a null
     // family falls back to the platform font. That is what left the app bar
     // title, the buttons, and the snack bars in Roboto.
-    final textTheme = _textTheme(scheme).apply(
-      fontFamily: fontFamily,
-      fontFamilyFallback: fontFamilyFallback,
-    );
+    final textTheme = _textTheme(
+      scheme,
+    ).apply(fontFamily: fontFamily, fontFamilyFallback: fontFamilyFallback);
 
     return ThemeData(
       colorScheme: scheme,
@@ -192,7 +270,9 @@ abstract final class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           minimumSize: const Size.fromHeight(touchTarget),
-          textStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+          textStyle: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
           side: BorderSide(color: scheme.outlineVariant, width: 1.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusMd),
@@ -202,40 +282,18 @@ abstract final class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           minimumSize: const Size(64, 48),
-          textStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+          textStyle: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusSm),
           ),
         ),
       ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: isDark
-            ? scheme.surfaceContainerHighest
-            : scheme.surfaceContainerLowest,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusMd),
-          borderSide: BorderSide(color: scheme.outlineVariant, width: 1.5),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusMd),
-          borderSide: BorderSide(color: scheme.outlineVariant, width: 1.5),
-        ),
-        // A visible focus ring: on a field whose value becomes a payment, the
-        // user should never be unsure which one they are typing into.
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusMd),
-          borderSide: BorderSide(color: scheme.primary, width: 2.5),
-        ),
-        labelStyle: textTheme.bodyLarge?.copyWith(color: scheme.onSurfaceVariant),
-        floatingLabelStyle: textTheme.bodyMedium?.copyWith(
-          color: scheme.primary,
-          fontWeight: FontWeight.w700,
-        ),
-        hintStyle: textTheme.bodyLarge?.copyWith(
-          color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
-        ),
+      inputDecorationTheme: _inputDecorationTheme(
+        scheme,
+        textTheme,
+        isDark: isDark,
       ),
       navigationBarTheme: NavigationBarThemeData(
         // A little above the M3 default so Arabic descenders and the taller
@@ -319,13 +377,53 @@ abstract final class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        contentTextStyle: textTheme.bodyLarge?.copyWith(color: scheme.onInverseSurface),
+        contentTextStyle: textTheme.bodyLarge?.copyWith(
+          color: scheme.onInverseSurface,
+        ),
         insetPadding: const EdgeInsets.all(gapLg),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusMd),
         ),
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(color: scheme.primary),
+    );
+  }
+
+  /// Extracted so the branded per-wallet theme can rebuild it against a
+  /// different `scheme.primary` without duplicating the whole definition.
+  static InputDecorationTheme _inputDecorationTheme(
+    ColorScheme scheme,
+    TextTheme textTheme, {
+    required bool isDark,
+  }) {
+    return InputDecorationTheme(
+      filled: true,
+      fillColor: isDark
+          ? scheme.surfaceContainerHighest
+          : scheme.surfaceContainerLowest,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(radiusMd),
+        borderSide: BorderSide(color: scheme.outlineVariant, width: 1.5),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(radiusMd),
+        borderSide: BorderSide(color: scheme.outlineVariant, width: 1.5),
+      ),
+      // A visible focus ring: on a field whose value becomes a payment, the
+      // user should never be unsure which one they are typing into.
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(radiusMd),
+        borderSide: BorderSide(color: scheme.primary, width: 2.5),
+      ),
+      labelStyle: textTheme.bodyLarge?.copyWith(color: scheme.onSurfaceVariant),
+      floatingLabelStyle: textTheme.bodyMedium?.copyWith(
+        color: scheme.primary,
+        fontWeight: FontWeight.w700,
+      ),
+      hintStyle: textTheme.bodyLarge?.copyWith(
+        color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+      ),
     );
   }
 

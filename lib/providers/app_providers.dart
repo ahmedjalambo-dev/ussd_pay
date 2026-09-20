@@ -169,6 +169,8 @@ class PaymentDraftNotifier extends Notifier<PaymentDraft> {
   void setAmountInput(String amount) =>
       state = state.copyWith(amountInput: amount);
 
+  void setNote(String note) => state = state.copyWith(note: note);
+
   /// Re-runs a past payment. Returns the draft so the caller can navigate
   /// straight to confirmation.
   PaymentDraft repeat(HistoryEntry entry, Wallet wallet) {
@@ -178,6 +180,7 @@ class PaymentDraftNotifier extends Notifier<PaymentDraft> {
       rawPhoneInput: entry.recipientNumber,
       amountInput: entry.amount.toString(),
       recipientName: entry.recipientName,
+      note: entry.note ?? '',
     );
     return state;
   }

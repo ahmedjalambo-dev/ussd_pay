@@ -20,6 +20,7 @@ class HistoryEntry {
     required this.amount,
     required this.ussdCode,
     this.recipientName,
+    this.note,
   }) : id = id ?? newId();
 
   final String id;
@@ -40,6 +41,11 @@ class HistoryEntry {
 
   final String? recipientName;
 
+  /// Optional free-text label attached at draft time. Null on old rows written
+  /// before this field existed, and on rows where the user left the field
+  /// blank -- both cases mean "no note".
+  final String? note;
+
   Map<String, dynamic> toMap() => {
         'id': id,
         'dialedAtUtc': dialedAtUtc.toUtc().toIso8601String(),
@@ -49,6 +55,7 @@ class HistoryEntry {
         'amount': amount,
         'ussdCode': ussdCode,
         if (recipientName != null) 'recipientName': recipientName,
+        if (note != null) 'note': note,
       };
 
   static HistoryEntry? fromMap(Object? raw) {
@@ -78,6 +85,7 @@ class HistoryEntry {
       amount: amount,
       ussdCode: ussdCode,
       recipientName: optString(map, 'recipientName'),
+      note: optString(map, 'note'),
     );
   }
 }

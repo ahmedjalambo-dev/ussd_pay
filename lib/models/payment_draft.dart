@@ -12,6 +12,7 @@ class PaymentDraft {
     this.rawPhoneInput = '',
     this.amountInput = '',
     this.recipientName,
+    this.note = '',
   });
 
   final Wallet? wallet;
@@ -29,6 +30,10 @@ class PaymentDraft {
   /// Set when the number came from a favorite or a contact.
   final String? recipientName;
 
+  /// Optional free-text label the user attached to this payment, so history
+  /// rows are recognisable at a glance. Never enters the dialed code.
+  final String note;
+
   num? get amount {
     final parsed = num.tryParse(amountInput);
     if (parsed == null || parsed <= 0) return null;
@@ -41,6 +46,7 @@ class PaymentDraft {
     String? rawPhoneInput,
     String? amountInput,
     String? recipientName,
+    String? note,
     bool clearRecipientName = false,
   }) =>
       PaymentDraft(
@@ -50,5 +56,6 @@ class PaymentDraft {
         amountInput: amountInput ?? this.amountInput,
         recipientName:
             clearRecipientName ? null : (recipientName ?? this.recipientName),
+        note: note ?? this.note,
       );
 }

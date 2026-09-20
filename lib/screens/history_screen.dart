@@ -63,6 +63,7 @@ class HistoryScreen extends ConsumerWidget {
           recipientName: entry.recipientName,
           amount: entry.amount,
           ussdCode: entry.ussdCode,
+          note: entry.note ?? '',
         ),
       ),
     );
@@ -97,8 +98,9 @@ class HistoryScreen extends ConsumerWidget {
             separatorBuilder: (_, _) => const SizedBox(height: AppTheme.gapMd),
             itemBuilder: (context, index) {
               final entry = entries[index];
-              final wallet =
-                  wallets.where((w) => w.id == entry.walletId).firstOrNull;
+              final wallet = wallets
+                  .where((w) => w.id == entry.walletId)
+                  .firstOrNull;
 
               return _HistoryCard(
                 entry: entry,
@@ -192,7 +194,8 @@ class _HistoryCard extends StatelessWidget {
                         children: [
                           Builder(
                             builder: (context) {
-                              final title = entry.recipientName ??
+                              final title =
+                                  entry.recipientName ??
                                   formatPhoneDisplay(entry.recipientNumber);
                               return Text(
                                 title,
@@ -240,8 +243,22 @@ class _HistoryCard extends StatelessWidget {
                   ].join(' · '),
                   style: theme.textTheme.labelSmall,
                 ),
+                if (entry.note != null && entry.note!.isNotEmpty) ...[
+                  const SizedBox(height: AppTheme.gapXs),
+                  Text(
+                    entry.note!,
+                    textDirection: directionOf(entry.note!),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: AppTheme.gapMd),
-                UssdPreview(code: entry.ussdCode, fontSize: 15, emphasised: false),
+                UssdPreview(
+                  code: entry.ussdCode,
+                  fontSize: 15,
+                  emphasised: false,
+                ),
               ],
             ),
           ),

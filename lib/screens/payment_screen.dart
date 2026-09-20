@@ -27,6 +27,7 @@ class PaymentScreen extends ConsumerStatefulWidget {
 class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   final _phoneController = TextEditingController();
   final _amountController = TextEditingController();
+  final _noteController = TextEditingController();
 
   /// Errors stay hidden until the user has typed something or tried to
   /// continue, so the screen does not open already scolding them.
@@ -45,6 +46,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           ? formatAmountDisplay(amount)
           : draft.amountInput;
     }
+    _noteController.text = draft.note;
     _showPhoneIssue = draft.rawPhoneInput.isNotEmpty;
   }
 
@@ -52,6 +54,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   void dispose() {
     _phoneController.dispose();
     _amountController.dispose();
+    _noteController.dispose();
     super.dispose();
   }
 
@@ -211,6 +214,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           recipientName: draft.recipientName,
           amount: amount,
           ussdCode: code,
+          note: draft.note.trim(),
         ),
       ),
     );
@@ -284,6 +288,26 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                         .setAmountInput(amount?.toString() ?? '');
                     setState(() {});
                   },
+                ),
+              ),
+              const SizedBox(height: AppTheme.gapXl),
+              _Section(
+                step: '4',
+                title: l10n.notesLabel,
+                child: TextField(
+                  controller: _noteController,
+                  maxLength: 60,
+                  maxLines: 1,
+                  textInputAction: TextInputAction.done,
+                  // No textDirection override: user-supplied free text, so the
+                  // field auto-picks per input (Arabic reads RTL, Latin LTR).
+                  decoration: InputDecoration(
+                    hintText: l10n.notesHint,
+                    prefixIcon: const Icon(Icons.notes_rounded),
+                  ),
+                  onChanged: (value) => ref
+                      .read(paymentDraftProvider.notifier)
+                      .setNote(value),
                 ),
               ),
               const SizedBox(height: AppTheme.gapXxl),

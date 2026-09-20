@@ -88,6 +88,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cancel => 'إلغاء';
 
   @override
+  String get done => 'تم';
+
+  @override
+  String get back => 'رجوع';
+
+  @override
+  String get notesLabel => 'ملاحظات (اختياري)';
+
+  @override
+  String get notesHint => 'مثلاً: إيجار حزيران';
+
+  @override
   String get copyCode => 'نسخ الكود';
 
   @override

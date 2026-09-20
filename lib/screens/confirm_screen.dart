@@ -27,6 +27,7 @@ class ConfirmScreen extends ConsumerStatefulWidget {
     required this.amount,
     required this.ussdCode,
     this.recipientName,
+    this.note = '',
   });
 
   final Wallet wallet;
@@ -35,6 +36,9 @@ class ConfirmScreen extends ConsumerStatefulWidget {
   final num amount;
   final String ussdCode;
   final String? recipientName;
+
+  /// Optional user-supplied label. Never enters the dialed code.
+  final String note;
 
   @override
   ConsumerState<ConfirmScreen> createState() => _ConfirmScreenState();
@@ -63,6 +67,7 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
             recipientName: widget.recipientName,
             amount: widget.amount,
             ussdCode: widget.ussdCode,
+            note: widget.note.trim().isEmpty ? null : widget.note.trim(),
           ),
         );
 
@@ -147,9 +152,20 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
             appBar: AppBar(
               title: Text(l10n.confirmTitle),
               actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(l10n.cancel),
+                // The AppBar already has a default back arrow (from
+                // Navigator.push), so a second "Cancel" action just duplicated
+                // it. Done ends the payment: it clears the in-progress draft
+                // and returns to the home tabs. Disabled while _dialing so it
+                // cannot race the history write.
+                IconButton(
+                  onPressed: _dialing
+                      ? null
+                      : () {
+                          ref.read(paymentDraftProvider.notifier).reset();
+                          Navigator.of(context).popUntil((r) => r.isFirst);
+                        },
+                  icon: Icon(Icons.done_rounded),
+                  // child: Text(l10n.done),
                 ),
               ],
             ),
@@ -225,6 +241,11 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
                           secondary: widget.recipientName != null
                               ? formatPhoneDisplay(widget.phone.local)
                               : carrierLabel(l10n, widget.phone.carrier),
+                          trailing: IconButton(
+                            onPressed: _saveFavorite,
+                            tooltip: l10n.saveAsFavorite,
+                            icon: const Icon(Icons.star_outline_rounded),
+                          ),
                         ),
                         const Divider(),
                         _DetailRow(
@@ -238,6 +259,14 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
                           ),
                           accent: Color(widget.wallet.colorValue),
                         ),
+                        if (widget.note.trim().isNotEmpty) ...[
+                          const Divider(),
+                          _DetailRow(
+                            icon: Icons.notes_rounded,
+                            label: l10n.notesLabel,
+                            value: widget.note.trim(),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -255,14 +284,26 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
                   _PinNoticeInline(text: l10n.pinNotice),
 
                   const SizedBox(height: AppTheme.gapXxl),
-                  FilledButton.icon(
-                    onPressed: _dialing ? null : _dial,
-                    icon: const Icon(Icons.phone_in_talk_rounded, size: 24),
-                    label: Text(l10n.callNow),
-                  ),
-                  const SizedBox(height: AppTheme.gapMd),
+                  // Primary action beside the code utility: the user's next
+                  // move is almost always "open dialer", occasionally "copy
+                  // code" (dialer unavailable, or wanting to paste into
+                  // another app). Pairing them keeps both within reach.
                   Row(
                     children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: _dialing ? null : _dial,
+                          icon: const Icon(
+                            Icons.phone_in_talk_rounded,
+                            size: 22,
+                          ),
+                          label: Text(
+                            l10n.callNow,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppTheme.gapMd),
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: () async {
@@ -273,20 +314,6 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
                           icon: const Icon(Icons.copy_rounded, size: 20),
                           label: Text(
                             l10n.copyCode,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppTheme.gapMd),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: _saveFavorite,
-                          icon: const Icon(
-                            Icons.star_outline_rounded,
-                            size: 20,
-                          ),
-                          label: Text(
-                            l10n.saveAsFavorite,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -352,6 +379,7 @@ class _DetailRow extends StatelessWidget {
     this.secondary,
     this.accent,
     this.iconAsset,
+    this.trailing,
   });
 
   final IconData icon;
@@ -364,6 +392,10 @@ class _DetailRow extends StatelessWidget {
   /// brand mark) the image is clipped to the same rounded square as the icon
   /// badge so the row's vertical rhythm stays intact.
   final String? iconAsset;
+
+  /// Optional trailing widget aligned to the row's end edge -- e.g. an inline
+  /// action button. Sized to sit within the row without expanding it.
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -404,6 +436,10 @@ class _DetailRow extends StatelessWidget {
               ],
             ),
           ),
+          if (trailing != null) ...[
+            const SizedBox(width: AppTheme.gapSm),
+            trailing!,
+          ],
         ],
       ),
     );

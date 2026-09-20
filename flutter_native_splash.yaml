@@ -1,0 +1,30 @@
+# Config for the `flutter_native_splash` generator. Regenerate the native
+# drawables and styles after editing this file with:
+#   dart run flutter_native_splash:create
+#
+# Android-only: CLAUDE.md scopes this app to Android; iOS/web splash
+# generation is intentionally off.
+flutter_native_splash:
+  # Light (day-mode) splash. Background matches AppTheme._lightSurface so
+  # there is no visible seam when the app opens over it.
+  color: "#F5F7FB"
+  image: assets/splash_light.png
+
+  # Dark (night-mode) splash. Background matches AppTheme._darkSurface. The
+  # app defaults to dark, so this is the splash most users will see.
+  color_dark: "#0B1220"
+  image_dark: assets/splash_dark.png
+
+  android: true
+  ios: false
+  web: false
+
+  # Android 12+ uses the system splash API: a colored background with a
+  # centered, mask-clipped icon. The provided images already carry the brand
+  # mark on the surface field, so they slot straight into the Android 12
+  # branded splash slot.
+  android_12:
+    color: "#F5F7FB"
+    image: assets/android12_splash_light.png
+    color_dark: "#0B1220"
+    image_dark: assets/android12_splash_dark.png

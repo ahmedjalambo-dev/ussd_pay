@@ -89,6 +89,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancel => 'Cancel';
 
   @override
+  String get done => 'Done';
+
+  @override
+  String get back => 'Back';
+
+  @override
+  String get notesLabel => 'Notes (optional)';
+
+  @override
+  String get notesHint => 'e.g. Rent June';
+
+  @override
   String get copyCode => 'Copy code';
 
   @override

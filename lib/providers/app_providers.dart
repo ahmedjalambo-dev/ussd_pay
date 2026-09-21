@@ -5,6 +5,7 @@ import '../models/favorite.dart';
 import '../models/history_entry.dart';
 import '../models/payment_draft.dart';
 import '../models/wallet.dart';
+import '../services/notification_service.dart';
 import '../services/storage_service.dart';
 import '../services/wallet_repository.dart';
 
@@ -12,6 +13,13 @@ import '../services/wallet_repository.dart';
 /// it synchronously.
 final storageServiceProvider = Provider<StorageService>(
   (ref) => throw UnimplementedError('storageServiceProvider must be overridden'),
+);
+
+/// Overridden in `main` after `NotificationService.init()` resolves.
+final notificationServiceProvider = Provider<NotificationService>(
+  (ref) => throw UnimplementedError(
+    'notificationServiceProvider must be overridden',
+  ),
 );
 
 final walletRepositoryProvider = Provider<WalletRepository>(

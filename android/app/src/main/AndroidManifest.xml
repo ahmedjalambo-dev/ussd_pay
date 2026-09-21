@@ -6,6 +6,12 @@
          so the last word on sending money is always theirs. -->
     <uses-permission android:name="android.permission.READ_CONTACTS"/>
 
+    <!-- Android 13+ (API 33) requires a runtime prompt to post notifications.
+         Used only for the local "did the payment go through?" prompt after
+         the user opens the dialer or copies the code. If the user denies it
+         the confirm screen keeps its AppBar "Done" button as the fallback. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
     <!-- Not every target device has telephony, and the app is still useful
          (build and copy a code) without it. -->
     <uses-feature android:name="android.hardware.telephony" android:required="false"/>

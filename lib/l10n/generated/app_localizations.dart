@@ -278,6 +278,34 @@ abstract class AppLocalizations {
   /// **'e.g. Rent June'**
   String get notesHint;
 
+  /// No description provided for @notifPaymentDecisionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Did the payment go through?'**
+  String get notifPaymentDecisionTitle;
+
+  /// No description provided for @notifPaymentDecisionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{wallet}: {amount} {currency}'**
+  String notifPaymentDecisionBody(
+    String wallet,
+    String amount,
+    String currency,
+  );
+
+  /// No description provided for @notifActionDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, done'**
+  String get notifActionDone;
+
+  /// No description provided for @notifActionCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'No, cancel'**
+  String get notifActionCancel;
+
   /// No description provided for @copyCode.
   ///
   /// In en, this message translates to:

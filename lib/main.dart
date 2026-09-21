@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
 import 'providers/app_providers.dart';
+import 'services/notification_service.dart';
 import 'services/storage_service.dart';
 
 Future<void> main() async {
@@ -17,9 +18,17 @@ Future<void> main() async {
   // are available synchronously everywhere else.
   final storage = await StorageService.open();
 
+  // Notifications are opened up-front so the payment-decision prompt is ready
+  // by the time the user reaches the confirm screen. The permission prompt
+  // itself is deferred to first use (see PaymentDecisionListener).
+  final notifications = await NotificationService.init();
+
   runApp(
     ProviderScope(
-      overrides: [storageServiceProvider.overrideWithValue(storage)],
+      overrides: [
+        storageServiceProvider.overrideWithValue(storage),
+        notificationServiceProvider.overrideWithValue(notifications),
+      ],
       child: const UssdPayApp(),
     ),
   );

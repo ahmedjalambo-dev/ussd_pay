@@ -36,6 +36,12 @@ dependencies:
   # Pinned to 0.20.2 by flutter_localizations in the Flutter 3.44 SDK.
   intl: ^0.20.2
 
+  # Local (device-only) notifications: the "did the payment go through?"
+  # prompt shown after the user hands the USSD code to the dialer, so they
+  # can pick Done / Cancel from the pulldown without switching back to the
+  # app. No network calls; the "no telemetry" invariant is intact.
+  flutter_local_notifications: ^22.3.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

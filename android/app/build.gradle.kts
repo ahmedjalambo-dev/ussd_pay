@@ -12,6 +12,11 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // flutter_local_notifications 18+ uses java.time.* internally, which
+        // is only in java.time on API 26+. Desugaring backports it down to
+        // our minSdk (24). See:
+        // https://developer.android.com/studio/write/java8-support
+        isCoreLibraryDesugaringEnabled = true
     }
 
     defaultConfig {
@@ -47,4 +52,11 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Backports java.time.* (and other Java 8+ APIs) to our minSdk 24, so
+    // flutter_local_notifications can compile. Track pub.dev's plugin bump
+    // notes if this version needs to change.
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

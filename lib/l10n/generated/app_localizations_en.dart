@@ -101,6 +101,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notesHint => 'e.g. Rent June';
 
   @override
+  String get notifPaymentDecisionTitle => 'Did the payment go through?';
+
+  @override
+  String notifPaymentDecisionBody(
+    String wallet,
+    String amount,
+    String currency,
+  ) {
+    return '$wallet: $amount $currency';
+  }
+
+  @override
+  String get notifActionDone => 'Yes, done';
+
+  @override
+  String get notifActionCancel => 'No, cancel';
+
+  @override
   String get copyCode => 'Copy code';
 
   @override

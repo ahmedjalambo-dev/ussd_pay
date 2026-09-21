@@ -47,32 +47,63 @@ class ConfirmScreen extends ConsumerStatefulWidget {
 class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
   bool _dialing = false;
 
+  /// Writes a history row for this attempt and returns it. Recorded before
+  /// any hand-off, because once the dialer takes over the app may be
+  /// backgrounded and never told what happened. Cancel on the notification
+  /// deletes the row after the fact.
+  Future<HistoryEntry> _writeHistoryEntry() async {
+    final entry = HistoryEntry(
+      dialedAtUtc: DateTime.now().toUtc(),
+      walletId: widget.wallet.id,
+      recipientType: widget.recipientType,
+      recipientNumber: widget.phone.local,
+      recipientName: widget.recipientName,
+      amount: widget.amount,
+      ussdCode: widget.ussdCode,
+      note: widget.note.trim().isEmpty ? null : widget.note.trim(),
+    );
+    await ref.read(historyProvider.notifier).add(entry);
+    return entry;
+  }
+
+  /// Fires the ongoing "did the payment go through?" prompt. The user can
+  /// answer Done/Cancel from the pulldown without switching back to the app;
+  /// PaymentDecisionListener applies the choice.
+  Future<void> _showDecisionNotification(HistoryEntry entry) async {
+    final l10n = AppLocalizations.of(context);
+    final localeCode = ref.read(settingsProvider).locale?.languageCode ?? 'ar';
+    await ref.read(notificationServiceProvider).showPaymentDecision(
+          historyEntryId: entry.id,
+          title: l10n.notifPaymentDecisionTitle,
+          body: l10n.notifPaymentDecisionBody(
+            widget.wallet.nameFor(localeCode),
+            formatAmountDisplay(widget.amount),
+            l10n.currencySymbol,
+          ),
+          doneLabel: l10n.notifActionDone,
+          cancelLabel: l10n.notifActionCancel,
+        );
+  }
+
   Future<void> _dial() async {
     if (_dialing) return;
     setState(() => _dialing = true);
 
     final l10n = AppLocalizations.of(context);
 
-    // Recorded before the hand-off, because once the dialer takes over the app
-    // may be backgrounded and never told what happened. History records what
-    // we dialed, not whether the carrier accepted it.
-    await ref
-        .read(historyProvider.notifier)
-        .add(
-          HistoryEntry(
-            dialedAtUtc: DateTime.now().toUtc(),
-            walletId: widget.wallet.id,
-            recipientType: widget.recipientType,
-            recipientNumber: widget.phone.local,
-            recipientName: widget.recipientName,
-            amount: widget.amount,
-            ussdCode: widget.ussdCode,
-            note: widget.note.trim().isEmpty ? null : widget.note.trim(),
-          ),
-        );
+    final entry = await _writeHistoryEntry();
 
     final outcome = await DialerService.dial(widget.ussdCode);
     if (!mounted) return;
+
+    // Show the decision prompt only if the dialer actually opened. If it did
+    // not, the user is still in-app and the copy-fallback snack (below) is
+    // enough -- no reason to bug them with an ongoing notification for a
+    // payment they never handed off.
+    if (outcome == DialOutcome.openedDialer) {
+      await _showDecisionNotification(entry);
+      if (!mounted) return;
+    }
 
     setState(() => _dialing = false);
     _snack(
@@ -81,6 +112,23 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
           : l10n.dialerUnavailable,
       duration: const Duration(seconds: 6),
     );
+  }
+
+  Future<void> _copyCode() async {
+    final l10n = AppLocalizations.of(context);
+    await DialerService.copy(widget.ussdCode);
+    if (!mounted) return;
+
+    // Copy-code is the "I will paste this into the dialer myself" path -- the
+    // user is about to leave the app just as they would with Open dialer, so
+    // it gets the same treatment: write a history row now, show the ongoing
+    // decision prompt, and let the user answer from the pulldown.
+    final entry = await _writeHistoryEntry();
+    if (!mounted) return;
+    await _showDecisionNotification(entry);
+    if (!mounted) return;
+
+    _snack(l10n.codeCopied);
   }
 
   Future<void> _saveFavorite() async {
@@ -161,11 +209,16 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
                   onPressed: _dialing
                       ? null
                       : () {
+                          // Also drop any stale decision notification: the
+                          // user answered in-app, so the pulldown prompt is
+                          // no longer relevant.
+                          ref
+                              .read(notificationServiceProvider)
+                              .cancelPaymentDecision();
                           ref.read(paymentDraftProvider.notifier).reset();
                           Navigator.of(context).popUntil((r) => r.isFirst);
                         },
-                  icon: Icon(Icons.done_rounded),
-                  // child: Text(l10n.done),
+                  icon: const Icon(Icons.done_rounded),
                 ),
               ],
             ),
@@ -306,11 +359,7 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
                       const SizedBox(width: AppTheme.gapMd),
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () async {
-                            await DialerService.copy(widget.ussdCode);
-                            if (!context.mounted) return;
-                            _snack(l10n.codeCopied);
-                          },
+                          onPressed: _dialing ? null : _copyCode,
                           icon: const Icon(Icons.copy_rounded, size: 20),
                           label: Text(
                             l10n.copyCode,

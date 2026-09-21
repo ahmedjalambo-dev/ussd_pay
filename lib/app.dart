@@ -6,6 +6,7 @@ import 'l10n/generated/app_localizations.dart';
 import 'providers/app_providers.dart';
 import 'screens/root_screen.dart';
 import 'theme/app_theme.dart';
+import 'widgets/payment_decision_listener.dart';
 
 class UssdPayApp extends ConsumerWidget {
   const UssdPayApp({super.key});
@@ -28,7 +29,7 @@ class UssdPayApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: const RootScreen(),
+      home: const PaymentDecisionListener(child: RootScreen()),
     );
   }
 }

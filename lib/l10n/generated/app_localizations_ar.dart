@@ -100,6 +100,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notesHint => 'مثلاً: إيجار حزيران';
 
   @override
+  String get notifPaymentDecisionTitle => 'هل تمّت الدفعة؟';
+
+  @override
+  String notifPaymentDecisionBody(
+    String wallet,
+    String amount,
+    String currency,
+  ) {
+    return '$wallet: $amount $currency';
+  }
+
+  @override
+  String get notifActionDone => 'نعم، تمّت';
+
+  @override
+  String get notifActionCancel => 'لا، ألغِ';
+
+  @override
   String get copyCode => 'نسخ الكود';
 
   @override

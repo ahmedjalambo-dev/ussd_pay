@@ -34,6 +34,18 @@
   "back": "Back",
   "notesLabel": "Notes (optional)",
   "notesHint": "e.g. Rent June",
+
+  "notifPaymentDecisionTitle": "Did the payment go through?",
+  "notifPaymentDecisionBody": "{wallet}: {amount} {currency}",
+  "@notifPaymentDecisionBody": {
+    "placeholders": {
+      "wallet": { "type": "String" },
+      "amount": { "type": "String" },
+      "currency": { "type": "String" }
+    }
+  },
+  "notifActionDone": "Yes, done",
+  "notifActionCancel": "No, cancel",
   "copyCode": "Copy code",
   "codeCopied": "Code copied",
   "pinNotice": "You will enter your wallet PIN in your carrier's own screen after dialing. USSD Pay never asks for it and never stores it.",

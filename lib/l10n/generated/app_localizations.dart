@@ -465,7 +465,7 @@ abstract class AppLocalizations {
   /// No description provided for @clearHistoryMessage.
   ///
   /// In en, this message translates to:
-  /// **'All recorded payments will be deleted from this device.'**
+  /// **'All recorded payments, done and cancelled, will be deleted from this device.'**
   String get clearHistoryMessage;
 
   /// No description provided for @clear.
@@ -473,6 +473,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear'**
   String get clear;
+
+  /// No description provided for @historyTabDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done ({count})'**
+  String historyTabDone(int count);
+
+  /// No description provided for @historyTabCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled ({count})'**
+  String historyTabCancelled(int count);
+
+  /// No description provided for @emptyDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed payments'**
+  String get emptyDoneTitle;
+
+  /// No description provided for @emptyDoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments you confirm as done will be listed here.'**
+  String get emptyDoneBody;
+
+  /// No description provided for @emptyCancelledTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No cancelled payments'**
+  String get emptyCancelledTitle;
+
+  /// No description provided for @emptyCancelledBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments you cancel or leave unanswered will be listed here.'**
+  String get emptyCancelledBody;
+
+  /// No description provided for @historyEntryDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment deleted'**
+  String get historyEntryDeleted;
+
+  /// No description provided for @undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
 
   /// No description provided for @language.
   ///

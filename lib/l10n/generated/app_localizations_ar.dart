@@ -206,10 +206,39 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get clearHistoryMessage =>
-      'سيتم حذف كل الدفعات المسجلة من هذا الجهاز.';
+      'سيتم حذف كل الدفعات المسجلة، المكتملة والملغاة، من هذا الجهاز.';
 
   @override
   String get clear => 'مسح';
+
+  @override
+  String historyTabDone(int count) {
+    return 'مكتملة ($count)';
+  }
+
+  @override
+  String historyTabCancelled(int count) {
+    return 'ملغاة ($count)';
+  }
+
+  @override
+  String get emptyDoneTitle => 'لا توجد دفعات مكتملة';
+
+  @override
+  String get emptyDoneBody => 'ستظهر هنا الدفعات التي تؤكد إتمامها.';
+
+  @override
+  String get emptyCancelledTitle => 'لا توجد دفعات ملغاة';
+
+  @override
+  String get emptyCancelledBody =>
+      'ستظهر هنا الدفعات التي ألغيتها أو لم تؤكدها.';
+
+  @override
+  String get historyEntryDeleted => 'تم حذف الدفعة';
+
+  @override
+  String get undo => 'تراجع';
 
   @override
   String get language => 'اللغة';

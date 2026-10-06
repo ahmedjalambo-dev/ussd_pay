@@ -80,8 +80,22 @@
   },
   "repeatPayment": "Repeat",
   "clearHistory": "Clear history",
-  "clearHistoryMessage": "All recorded payments will be deleted from this device.",
+  "clearHistoryMessage": "All recorded payments, done and cancelled, will be deleted from this device.",
   "clear": "Clear",
+  "historyTabDone": "Done ({count})",
+  "@historyTabDone": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "historyTabCancelled": "Cancelled ({count})",
+  "@historyTabCancelled": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "emptyDoneTitle": "No completed payments",
+  "emptyDoneBody": "Payments you confirm as done will be listed here.",
+  "emptyCancelledTitle": "No cancelled payments",
+  "emptyCancelledBody": "Payments you cancel or leave unanswered will be listed here.",
+  "historyEntryDeleted": "Payment deleted",
+  "undo": "Undo",
 
   "language": "Language",
   "languageArabic": "العربية",

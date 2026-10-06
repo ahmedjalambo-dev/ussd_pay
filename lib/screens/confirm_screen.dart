@@ -47,10 +47,15 @@ class ConfirmScreen extends ConsumerStatefulWidget {
 class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
   bool _dialing = false;
 
+  /// The row written by the most recent dial/copy on this screen, so the
+  /// AppBar Done button can mark it as done.
+  HistoryEntry? _lastEntry;
+
   /// Writes a history row for this attempt and returns it. Recorded before
   /// any hand-off, because once the dialer takes over the app may be
-  /// backgrounded and never told what happened. Cancel on the notification
-  /// deletes the row after the fact.
+  /// backgrounded and never told what happened. The row starts as cancelled
+  /// and becomes done only when the user says so (notification Done or the
+  /// AppBar Done button) -- an unanswered payment is not claimed as sent.
   Future<HistoryEntry> _writeHistoryEntry() async {
     final entry = HistoryEntry(
       dialedAtUtc: DateTime.now().toUtc(),
@@ -63,6 +68,7 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
       note: widget.note.trim().isEmpty ? null : widget.note.trim(),
     );
     await ref.read(historyProvider.notifier).add(entry);
+    _lastEntry = entry;
     return entry;
   }
 
@@ -202,9 +208,11 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
               actions: [
                 // The AppBar already has a default back arrow (from
                 // Navigator.push), so a second "Cancel" action just duplicated
-                // it. Done ends the payment: it clears the in-progress draft
-                // and returns to the home tabs. Disabled while _dialing so it
-                // cannot race the history write.
+                // it. Done ends the payment: it marks the dialed history row
+                // as done, clears the in-progress draft and returns to the
+                // home tabs. Leaving with the back arrow instead keeps the
+                // row cancelled. Disabled while _dialing so it cannot race
+                // the history write.
                 IconButton(
                   onPressed: _dialing
                       ? null
@@ -215,6 +223,12 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
                           ref
                               .read(notificationServiceProvider)
                               .cancelPaymentDecision();
+                          final entry = _lastEntry;
+                          if (entry != null) {
+                            ref
+                                .read(historyProvider.notifier)
+                                .setStatus(entry.id, HistoryStatus.done);
+                          }
                           ref.read(paymentDraftProvider.notifier).reset();
                           Navigator.of(context).popUntil((r) => r.isFirst);
                         },

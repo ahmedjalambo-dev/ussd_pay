@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/history_entry.dart';
 import '../providers/app_providers.dart';
 import '../services/notification_service.dart';
 
@@ -15,9 +16,9 @@ import '../services/notification_service.dart';
 /// - Subscribes to the event stream so taps that happen while the app is
 ///   already running resolve immediately.
 ///
-/// Actions apply directly to the running Riverpod graph -- `Done` resets
-/// the draft and pops to the root; `Cancel` also deletes the history row
-/// the notification was attached to.
+/// Actions apply directly to the running Riverpod graph: both record the
+/// answer as the status of the history row the notification was attached
+/// to, reset the draft, and pop to the root.
 class PaymentDecisionListener extends ConsumerStatefulWidget {
   const PaymentDecisionListener({super.key, required this.child});
 
@@ -60,13 +61,16 @@ class _PaymentDecisionListenerState
   void _apply(PaymentDecisionEvent event) {
     if (!mounted) return;
 
-    switch (event.action) {
-      case NotificationAction.cancel:
-        ref.read(historyProvider.notifier).delete(event.historyEntryId);
-      case NotificationAction.done:
-        // History row stays. Nothing to undo.
-        break;
-    }
+    // Cancel is written explicitly even though new rows already start as
+    // cancelled: the row must end up matching what the user tapped, whatever
+    // state it was in.
+    final status = switch (event.action) {
+      NotificationAction.done => HistoryStatus.done,
+      NotificationAction.cancel => HistoryStatus.cancelled,
+    };
+    ref
+        .read(historyProvider.notifier)
+        .setStatus(event.historyEntryId, status);
 
     ref.read(paymentDraftProvider.notifier).reset();
     // The confirm screen may still be on the stack (user was in the dialer

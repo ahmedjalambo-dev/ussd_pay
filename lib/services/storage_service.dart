@@ -112,6 +112,14 @@ class StorageService {
     await _trimHistory();
   }
 
+  /// Records the user's answer for one row. A row that is gone (deleted, or
+  /// trimmed past the cap) or unreadable is left alone rather than recreated.
+  Future<void> setHistoryStatus(String id, HistoryStatus status) async {
+    final entry = HistoryEntry.fromMap(_history.get(id));
+    if (entry == null) return;
+    await _history.put(id, entry.copyWith(status: status).toMap());
+  }
+
   Future<void> deleteHistoryEntry(String id) => _history.delete(id);
 
   Future<void> clearHistory() => _history.clear();

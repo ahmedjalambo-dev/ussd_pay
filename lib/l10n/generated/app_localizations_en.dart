@@ -207,10 +207,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clearHistoryMessage =>
-      'All recorded payments will be deleted from this device.';
+      'All recorded payments, done and cancelled, will be deleted from this device.';
 
   @override
   String get clear => 'Clear';
+
+  @override
+  String historyTabDone(int count) {
+    return 'Done ($count)';
+  }
+
+  @override
+  String historyTabCancelled(int count) {
+    return 'Cancelled ($count)';
+  }
+
+  @override
+  String get emptyDoneTitle => 'No completed payments';
+
+  @override
+  String get emptyDoneBody =>
+      'Payments you confirm as done will be listed here.';
+
+  @override
+  String get emptyCancelledTitle => 'No cancelled payments';
+
+  @override
+  String get emptyCancelledBody =>
+      'Payments you cancel or leave unanswered will be listed here.';
+
+  @override
+  String get historyEntryDeleted => 'Payment deleted';
+
+  @override
+  String get undo => 'Undo';
 
   @override
   String get language => 'Language';

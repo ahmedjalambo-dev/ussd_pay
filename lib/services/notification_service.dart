@@ -57,8 +57,8 @@ class NotificationService {
   }
 
   /// Fires whenever the user taps one of the notification's action buttons.
-  /// The main isolate listens and applies the action (reset draft, delete
-  /// history row, etc.).
+  /// The main isolate listens and applies the action (reset draft, set the
+  /// history row's status, etc.).
   Stream<PaymentDecisionEvent> get events => _events.stream;
 
   /// If the app was cold-started by tapping an action on the notification,
@@ -97,8 +97,9 @@ class NotificationService {
       importance: Importance.high,
       priority: Priority.high,
       // Ongoing + autoCancel:false makes the notification non-dismissible on
-      // Android <=13. On 14+ users can force-dismiss it -- we treat that as
-      // "Done" (do nothing) for safety.
+      // Android <=13. On 14+ users can force-dismiss it -- that counts as
+      // "Cancelled", which needs no code: history rows start as cancelled
+      // and only an explicit Done changes that.
       ongoing: true,
       autoCancel: false,
       category: AndroidNotificationCategory.status,
@@ -130,8 +131,8 @@ class NotificationService {
       title: title,
       body: body,
       notificationDetails: NotificationDetails(android: androidDetails),
-      // Payload carries the history row id so we know which row to touch
-      // when the user picks Cancel.
+      // Payload carries the history row id so we know which row to mark
+      // when the user answers.
       payload: historyEntryId,
     );
   }

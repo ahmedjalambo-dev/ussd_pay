@@ -129,6 +129,11 @@ class HistoryNotifier extends Notifier<List<HistoryEntry>> {
     _refresh();
   }
 
+  Future<void> setStatus(String id, HistoryStatus status) async {
+    await ref.read(storageServiceProvider).setHistoryStatus(id, status);
+    _refresh();
+  }
+
   Future<void> delete(String id) async {
     await ref.read(storageServiceProvider).deleteHistoryEntry(id);
     _refresh();
@@ -144,6 +149,15 @@ class HistoryNotifier extends Notifier<List<HistoryEntry>> {
 
 final historyProvider =
     NotifierProvider<HistoryNotifier, List<HistoryEntry>>(HistoryNotifier.new);
+
+/// History for one tab (Done or Cancelled), still newest first.
+final historyByStatusProvider =
+    Provider.family<List<HistoryEntry>, HistoryStatus>((ref, status) {
+  return ref
+      .watch(historyProvider)
+      .where((entry) => entry.status == status)
+      .toList(growable: false);
+});
 
 // --- The payment in progress ----------------------------------------------
 

@@ -1,48 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/formatting.dart';
 import '../l10n/generated/app_localizations.dart';
-import '../models/favorite.dart';
 import '../models/wallet.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/favorite_tile.dart';
 import 'payment_screen.dart';
 
+/// Saved recipients, in the same compact style as history. Long-press starts
+/// selecting; while selecting, a tap toggles a row instead of opening it.
 class FavoritesScreen extends ConsumerWidget {
   const FavoritesScreen({super.key});
 
-  Future<void> _confirmDelete(
+  /// Deletes every selected favorite at once and offers Undo, rather than
+  /// asking first, as history does: selecting and pressing delete is already
+  /// two deliberate steps, and Undo puts the rows back exactly as they were.
+  /// Public so the root AppBar, which owns the delete action, can call it.
+  static Future<void> deleteSelected(
     BuildContext context,
     WidgetRef ref,
-    Favorite favorite,
   ) async {
     final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.deleteFavoriteTitle),
-        content: Text(l10n.deleteFavoriteMessage(favorite.name)),
-        actions: [
-          TextButton(
-            style: TextButton.styleFrom(minimumSize: AppTheme.dialogActionSize),
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.cancel),
+    final messenger = ScaffoldMessenger.of(context);
+    final ids = ref.read(favoritesSelectionProvider);
+    final removed = ref
+        .read(favoritesProvider)
+        .where((f) => ids.contains(f.id))
+        .toList(growable: false);
+    if (removed.isEmpty) return;
+
+    final notifier = ref.read(favoritesProvider.notifier);
+    ref.read(favoritesSelectionProvider.notifier).clear();
+    await notifier.deleteMany(removed.map((f) => f.id));
+
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(l10n.favoritesDeleted(removed.length)),
+          action: SnackBarAction(
+            label: l10n.undo,
+            onPressed: () => notifier.restore(removed),
           ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              minimumSize: AppTheme.dialogActionSize,
-            ),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
-    );
-    if (confirmed ?? false) {
-      await ref.read(favoritesProvider.notifier).delete(favorite.id);
-    }
+        ),
+      );
   }
 
   @override
@@ -51,6 +54,8 @@ class FavoritesScreen extends ConsumerWidget {
     final favorites = ref.watch(favoritesProvider);
     final wallets = ref.watch(walletsProvider).value ?? const <Wallet>[];
     final localeCode = ref.watch(settingsProvider).locale?.languageCode ?? 'ar';
+    final selection = ref.watch(favoritesSelectionProvider);
+    final selector = ref.read(favoritesSelectionProvider.notifier);
 
     if (favorites.isEmpty) {
       return EmptyState(
@@ -61,27 +66,32 @@ class FavoritesScreen extends ConsumerWidget {
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(
-        AppTheme.screenPadding,
-        AppTheme.gapLg,
-        AppTheme.screenPadding,
-        AppTheme.gapXl,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: AppTheme.gapSm),
       itemCount: favorites.length,
-      separatorBuilder: (_, _) => const SizedBox(height: AppTheme.gapMd),
+      separatorBuilder: (_, _) => const Divider(
+        height: 1,
+        indent: AppTheme.screenPadding,
+        endIndent: AppTheme.screenPadding,
+      ),
       itemBuilder: (context, index) {
         final favorite = favorites[index];
-        final wallet =
-            wallets.where((w) => w.id == favorite.walletId).firstOrNull;
+        final wallet = wallets
+            .where((w) => w.id == favorite.walletId)
+            .firstOrNull;
 
-        return _FavoriteCard(
+        return FavoriteTile(
           favorite: favorite,
-          wallet: wallet,
-          localeCode: localeCode,
-          onDelete: () => _confirmDelete(context, ref, favorite),
-          // Opens a pre-filled payment screen, never the confirmation screen
-          // directly: the amount still has to be entered and reviewed.
-          onTap: wallet == null
+          walletName: wallet?.nameFor(localeCode),
+          walletColor: wallet != null ? Color(wallet.colorValue) : null,
+          selecting: selection.isNotEmpty,
+          selected: selection.contains(favorite.id),
+          onLongPress: () => selector.toggle(favorite.id),
+          onTap: selection.isNotEmpty
+              ? () => selector.toggle(favorite.id)
+              // Opens a pre-filled payment screen, never the confirmation
+              // screen directly: the amount still has to be entered and
+              // reviewed.
+              : wallet == null
               ? null
               : () {
                   ref
@@ -95,110 +105,6 @@ class FavoritesScreen extends ConsumerWidget {
                 },
         );
       },
-    );
-  }
-}
-
-class _FavoriteCard extends StatelessWidget {
-  const _FavoriteCard({
-    required this.favorite,
-    required this.wallet,
-    required this.localeCode,
-    required this.onDelete,
-    required this.onTap,
-  });
-
-  final Favorite favorite;
-  final Wallet? wallet;
-  final String localeCode;
-  final VoidCallback onDelete;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final walletName = wallet?.nameFor(localeCode);
-    final brandColor =
-        wallet != null ? Color(wallet!.colorValue) : scheme.outline;
-
-    return Container(
-      decoration: AppTheme.surface(context),
-      clipBehavior: Clip.antiAlias,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.gapLg),
-            child: Row(
-              children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: brandColor,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  ),
-                  child: Text(
-                    favorite.name.characters.firstOrNull ?? '?',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppTheme.gapLg),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        favorite.name,
-                        // A name the user typed: a Latin or numeric one would
-                        // otherwise be reordered by bidi inside the Arabic
-                        // layout.
-                        textDirection: directionOf(favorite.name),
-                        style: theme.textTheme.titleSmall,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      // Align outside, Directionality inside: the row sits on
-                      // the reading side, the digits stay in dialing order.
-                      Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: Directionality(
-                          textDirection: TextDirection.ltr,
-                          child: Text(
-                            formatPhoneDisplay(favorite.number),
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                        ),
-                      ),
-                      if (walletName != null) ...[
-                        const SizedBox(height: AppTheme.gapXs),
-                        Text(
-                          '$walletName · '
-                          '${recipientTypeLabel(l10n, favorite.defaultType)}',
-                          style: theme.textTheme.labelSmall,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline_rounded, size: 24),
-                  tooltip: l10n.delete,
-                  color: scheme.onSurfaceVariant,
-                  onPressed: onDelete,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

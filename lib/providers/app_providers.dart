@@ -12,7 +12,8 @@ import '../services/wallet_repository.dart';
 /// Overridden in `main` once storage is open, so the rest of the app can read
 /// it synchronously.
 final storageServiceProvider = Provider<StorageService>(
-  (ref) => throw UnimplementedError('storageServiceProvider must be overridden'),
+  (ref) =>
+      throw UnimplementedError('storageServiceProvider must be overridden'),
 );
 
 /// Overridden in `main` after `NotificationService.init()` resolves.
@@ -45,11 +46,14 @@ class AppSettings {
   final Locale? locale;
   final ThemeMode themeMode;
 
-  AppSettings copyWith({Locale? locale, ThemeMode? themeMode, bool clearLocale = false}) =>
-      AppSettings(
-        locale: clearLocale ? null : (locale ?? this.locale),
-        themeMode: themeMode ?? this.themeMode,
-      );
+  AppSettings copyWith({
+    Locale? locale,
+    ThemeMode? themeMode,
+    bool clearLocale = false,
+  }) => AppSettings(
+    locale: clearLocale ? null : (locale ?? this.locale),
+    themeMode: themeMode ?? this.themeMode,
+  );
 }
 
 class SettingsNotifier extends Notifier<AppSettings> {
@@ -78,14 +82,15 @@ class SettingsNotifier extends Notifier<AppSettings> {
   /// Dark by default: it saves battery on OLED panels and is easier to read at
   /// night, which is when the power is more likely to be on.
   static ThemeMode _themeModeFrom(String? name) => switch (name) {
-        'light' => ThemeMode.light,
-        'system' => ThemeMode.system,
-        _ => ThemeMode.dark,
-      };
+    'light' => ThemeMode.light,
+    'system' => ThemeMode.system,
+    _ => ThemeMode.dark,
+  };
 }
 
-final settingsProvider =
-    NotifierProvider<SettingsNotifier, AppSettings>(SettingsNotifier.new);
+final settingsProvider = NotifierProvider<SettingsNotifier, AppSettings>(
+  SettingsNotifier.new,
+);
 
 // --- Favorites -------------------------------------------------------------
 
@@ -98,20 +103,63 @@ class FavoritesNotifier extends Notifier<List<Favorite>> {
     _refresh();
   }
 
-  Future<void> delete(String id) async {
-    await ref.read(storageServiceProvider).deleteFavorite(id);
+  Future<void> deleteMany(Iterable<String> ids) async {
+    await ref.read(storageServiceProvider).deleteFavorites(ids);
+    _refresh();
+  }
+
+  Future<void> restore(List<Favorite> favorites) async {
+    await ref.read(storageServiceProvider).restoreFavorites(favorites);
     _refresh();
   }
 
   void _refresh() => state = ref.read(storageServiceProvider).favorites();
 }
 
-final favoritesProvider =
-    NotifierProvider<FavoritesNotifier, List<Favorite>>(FavoritesNotifier.new);
+final favoritesProvider = NotifierProvider<FavoritesNotifier, List<Favorite>>(
+  FavoritesNotifier.new,
+);
+
+/// Favorites picked for deletion. A provider for the same reason as
+/// [HistorySelection]: the root AppBar shows the count and the delete action.
+class FavoritesSelectionNotifier extends Notifier<Set<String>> {
+  @override
+  Set<String> build() {
+    // Drop ids whose rows are gone, so a stale selection can never outlive
+    // its rows.
+    ref.listen(favoritesProvider, (_, favorites) {
+      if (state.isEmpty) return;
+      final alive = favorites.map((f) => f.id).toSet();
+      final kept = state.where(alive.contains).toSet();
+      if (kept.length != state.length) state = kept;
+    });
+    return const <String>{};
+  }
+
+  void toggle(String id) {
+    final ids = {...state};
+    if (!ids.remove(id)) ids.add(id);
+    state = ids;
+  }
+
+  void selectAll() =>
+      state = {for (final f in ref.read(favoritesProvider)) f.id};
+
+  void clear() {
+    if (state.isNotEmpty) state = const <String>{};
+  }
+}
+
+final favoritesSelectionProvider =
+    NotifierProvider<FavoritesSelectionNotifier, Set<String>>(
+      FavoritesSelectionNotifier.new,
+    );
 
 /// Favorites for one wallet, for the picker on the payment screen.
-final favoritesForWalletProvider =
-    Provider.family<List<Favorite>, String>((ref, walletId) {
+final favoritesForWalletProvider = Provider.family<List<Favorite>, String>((
+  ref,
+  walletId,
+) {
   return ref
       .watch(favoritesProvider)
       .where((favorite) => favorite.walletId == walletId)
@@ -139,6 +187,16 @@ class HistoryNotifier extends Notifier<List<HistoryEntry>> {
     _refresh();
   }
 
+  Future<void> deleteMany(Iterable<String> ids) async {
+    await ref.read(storageServiceProvider).deleteHistoryEntries(ids);
+    _refresh();
+  }
+
+  Future<void> restore(List<HistoryEntry> entries) async {
+    await ref.read(storageServiceProvider).restoreHistoryEntries(entries);
+    _refresh();
+  }
+
   Future<void> clear() async {
     await ref.read(storageServiceProvider).clearHistory();
     _refresh();
@@ -147,17 +205,81 @@ class HistoryNotifier extends Notifier<List<HistoryEntry>> {
   void _refresh() => state = ref.read(storageServiceProvider).history();
 }
 
-final historyProvider =
-    NotifierProvider<HistoryNotifier, List<HistoryEntry>>(HistoryNotifier.new);
+final historyProvider = NotifierProvider<HistoryNotifier, List<HistoryEntry>>(
+  HistoryNotifier.new,
+);
 
 /// History for one tab (Done or Cancelled), still newest first.
 final historyByStatusProvider =
     Provider.family<List<HistoryEntry>, HistoryStatus>((ref, status) {
-  return ref
-      .watch(historyProvider)
-      .where((entry) => entry.status == status)
-      .toList(growable: false);
-});
+      return ref
+          .watch(historyProvider)
+          .where((entry) => entry.status == status)
+          .toList(growable: false);
+    });
+
+/// Rows picked for deletion in the history list, scoped to one tab.
+///
+/// Lives in a provider rather than in the list's State because the root
+/// AppBar, a different widget, shows the selection count and the delete
+/// action.
+class HistorySelection {
+  const HistorySelection({
+    this.tab = HistoryStatus.done,
+    this.ids = const <String>{},
+  });
+
+  final HistoryStatus tab;
+  final Set<String> ids;
+
+  bool get active => ids.isNotEmpty;
+}
+
+class HistorySelectionNotifier extends Notifier<HistorySelection> {
+  @override
+  HistorySelection build() {
+    // Drop ids whose rows are gone (deleted, cleared from Settings, trimmed
+    // past the cap), so a stale selection can never outlive its rows.
+    ref.listen(historyProvider, (_, entries) {
+      if (!state.active) return;
+      final alive = entries.map((e) => e.id).toSet();
+      final kept = state.ids.where(alive.contains).toSet();
+      if (kept.length != state.ids.length) {
+        state = HistorySelection(tab: state.tab, ids: kept);
+      }
+    });
+    return const HistorySelection();
+  }
+
+  void toggle(String id) {
+    final ids = {...state.ids};
+    if (!ids.remove(id)) ids.add(id);
+    state = HistorySelection(tab: state.tab, ids: ids);
+  }
+
+  void selectAll() {
+    final entries = ref.read(historyByStatusProvider(state.tab));
+    state = HistorySelection(
+      tab: state.tab,
+      ids: {for (final e in entries) e.id},
+    );
+  }
+
+  void clear() {
+    if (state.active) state = HistorySelection(tab: state.tab);
+  }
+
+  /// Switching tabs ends the selection: it only ever covers rows the user
+  /// can see.
+  void setTab(HistoryStatus tab) {
+    if (tab != state.tab || state.active) state = HistorySelection(tab: tab);
+  }
+}
+
+final historySelectionProvider =
+    NotifierProvider<HistorySelectionNotifier, HistorySelection>(
+      HistorySelectionNotifier.new,
+    );
 
 // --- The payment in progress ----------------------------------------------
 
@@ -223,4 +345,5 @@ class PaymentDraftNotifier extends Notifier<PaymentDraft> {
 
 final paymentDraftProvider =
     NotifierProvider<PaymentDraftNotifier, PaymentDraft>(
-        PaymentDraftNotifier.new);
+      PaymentDraftNotifier.new,
+    );

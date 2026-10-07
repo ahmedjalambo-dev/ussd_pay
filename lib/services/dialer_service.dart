@@ -29,7 +29,8 @@ abstract final class DialerService {
   /// `tel:*268*1*0599123456*50` with the fragment discarded -- the dialer would
   /// receive a truncated code that is not a valid USSD command. This is the
   /// single most common bug in USSD apps, and it is covered by a test.
-  static Uri buildDialUri(String ussdCode) => Uri(scheme: 'tel', path: ussdCode);
+  static Uri buildDialUri(String ussdCode) =>
+      Uri(scheme: 'tel', path: ussdCode);
 
   /// True on platforms where a `tel:` hand-off makes sense.
   static bool get supportsDialing {

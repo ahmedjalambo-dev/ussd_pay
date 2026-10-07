@@ -192,11 +192,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get delete => 'Delete';
 
   @override
-  String get deleteFavoriteTitle => 'Delete this recipient?';
-
-  @override
-  String deleteFavoriteMessage(String name) {
-    return '$name will be removed from your favorites.';
+  String favoritesDeleted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recipients deleted',
+      one: '1 recipient deleted',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -237,7 +240,35 @@ class AppLocalizationsEn extends AppLocalizations {
       'Payments you cancel or leave unanswered will be listed here.';
 
   @override
-  String get historyEntryDeleted => 'Payment deleted';
+  String historyEntriesDeleted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count payments deleted',
+      one: '1 payment deleted',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String selectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get selectAll => 'Select all';
+
+  @override
+  String get cancelSelection => 'Cancel selection';
+
+  @override
+  String get paymentDetails => 'Payment details';
+
+  @override
+  String get data => 'Data';
+
+  @override
+  String get historyCleared => 'History cleared';
 
   @override
   String get undo => 'Undo';

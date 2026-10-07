@@ -107,7 +107,8 @@ abstract final class PhoneNormalizer {
     for (final rune in input.runes) {
       if (rune >= _arabicIndicZero && rune <= _arabicIndicNine) {
         buffer.writeCharCode(_asciiZero + rune - _arabicIndicZero);
-      } else if (rune >= _extendedArabicIndicZero && rune <= _extendedArabicIndicNine) {
+      } else if (rune >= _extendedArabicIndicZero &&
+          rune <= _extendedArabicIndicNine) {
         buffer.writeCharCode(_asciiZero + rune - _extendedArabicIndicZero);
       } else {
         buffer.writeCharCode(rune);
@@ -162,7 +163,9 @@ abstract final class PhoneNormalizer {
         local: digits,
         national: '',
         carrier: Carrier.unknown,
-        issue: digits.length < nationalLength ? PhoneIssue.tooShort : PhoneIssue.tooLong,
+        issue: digits.length < nationalLength
+            ? PhoneIssue.tooShort
+            : PhoneIssue.tooLong,
       );
     }
 
@@ -180,16 +183,21 @@ abstract final class PhoneNormalizer {
   /// A bare `970`/`972` with no `+` or `00` is only stripped when the total
   /// length makes it unambiguous. Stripping it from a shorter string would
   /// silently corrupt a number the user typed correctly.
-  static String _stripCountryCode(String digits, {required bool hasLeadingPlus}) {
+  static String _stripCountryCode(
+    String digits, {
+    required bool hasLeadingPlus,
+  }) {
     const codes = ['970', '972'];
 
     for (final code in codes) {
-      if (digits.startsWith('00$code')) return digits.substring(2 + code.length);
+      if (digits.startsWith('00$code'))
+        return digits.substring(2 + code.length);
     }
     for (final code in codes) {
       if (!digits.startsWith(code)) continue;
       // `+970599123456` (12) or `+9700599123456` (13, redundant trunk zero).
-      final unambiguous = hasLeadingPlus ||
+      final unambiguous =
+          hasLeadingPlus ||
           digits.length == code.length + nationalLength ||
           digits.length == code.length + nationalLength + 1;
       if (unambiguous) return digits.substring(code.length);

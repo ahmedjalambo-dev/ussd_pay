@@ -73,10 +73,9 @@
   "favoriteNameLabel": "Name",
   "save": "Save",
   "delete": "Delete",
-  "deleteFavoriteTitle": "Delete this recipient?",
-  "deleteFavoriteMessage": "{name} will be removed from your favorites.",
-  "@deleteFavoriteMessage": {
-    "placeholders": { "name": { "type": "String" } }
+  "favoritesDeleted": "{count, plural, =1{1 recipient deleted} other{{count} recipients deleted}}",
+  "@favoritesDeleted": {
+    "placeholders": { "count": { "type": "int" } }
   },
   "repeatPayment": "Repeat",
   "clearHistory": "Clear history",
@@ -94,7 +93,19 @@
   "emptyDoneBody": "Payments you confirm as done will be listed here.",
   "emptyCancelledTitle": "No cancelled payments",
   "emptyCancelledBody": "Payments you cancel or leave unanswered will be listed here.",
-  "historyEntryDeleted": "Payment deleted",
+  "historyEntriesDeleted": "{count, plural, =1{1 payment deleted} other{{count} payments deleted}}",
+  "@historyEntriesDeleted": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "selectedCount": "{count} selected",
+  "@selectedCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "selectAll": "Select all",
+  "cancelSelection": "Cancel selection",
+  "paymentDetails": "Payment details",
+  "data": "Data",
+  "historyCleared": "History cleared",
   "undo": "Undo",
 
   "language": "Language",

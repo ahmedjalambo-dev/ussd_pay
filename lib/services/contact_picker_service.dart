@@ -24,7 +24,7 @@ enum ContactPickFailure {
 class ContactPickResult {
   const ContactPickResult.picked(PickedContact this.contact) : failure = null;
   const ContactPickResult.failed(ContactPickFailure this.failure)
-      : contact = null;
+    : contact = null;
 
   final PickedContact? contact;
   final ContactPickFailure? failure;
@@ -39,11 +39,16 @@ abstract final class ContactPickerService {
   static Future<ContactPickResult> pick() async {
     // The picker itself is permissionless, but returns only id and displayName
     // without READ_CONTACTS -- and a name without a number is useless here.
-    final status = await FlutterContacts.permissions.request(PermissionType.read);
-    final granted = status == PermissionStatus.granted ||
+    final status = await FlutterContacts.permissions.request(
+      PermissionType.read,
+    );
+    final granted =
+        status == PermissionStatus.granted ||
         status == PermissionStatus.limited;
     if (!granted) {
-      return const ContactPickResult.failed(ContactPickFailure.permissionDenied);
+      return const ContactPickResult.failed(
+        ContactPickFailure.permissionDenied,
+      );
     }
 
     final Contact? contact;
@@ -52,7 +57,9 @@ abstract final class ContactPickerService {
         properties: {ContactProperty.name, ContactProperty.phone},
       );
     } on PlatformException {
-      return const ContactPickResult.failed(ContactPickFailure.permissionDenied);
+      return const ContactPickResult.failed(
+        ContactPickFailure.permissionDenied,
+      );
     }
 
     if (contact == null) {

@@ -45,6 +45,15 @@ String formatPhoneDisplay(String local) {
 TextDirection directionOf(String text) =>
     Bidi.detectRtlDirectionality(text) ? TextDirection.rtl : TextDirection.ltr;
 
+/// Wraps [text] in a Unicode left-to-right isolate (LRI ... PDI).
+///
+/// For a phone number that shares one `Text` with Arabic labels, where a
+/// `Directionality` wrapper cannot reach it: without the isolate, the
+/// space-separated digit groups of `059 912 3456` are laid out right to left
+/// as `3456 912 059` -- a different number from the one being paid.
+String ltrIsolate(String text) =>
+    '${String.fromCharCode(0x2066)}$text${String.fromCharCode(0x2069)}';
+
 String recipientTypeLabel(AppLocalizations l10n, String typeKey) =>
     switch (typeKey) {
       RecipientTypes.friend => l10n.recipientTypeFriend,

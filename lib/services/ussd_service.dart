@@ -124,7 +124,9 @@ abstract final class UssdService {
       throw const UssdBuildException('The amount is not a number.');
     }
     if (amount <= 0) {
-      throw UssdBuildException('The amount must be greater than zero (got $amount).');
+      throw UssdBuildException(
+        'The amount must be greater than zero (got $amount).',
+      );
     }
     final rounded = double.parse(amount.toStringAsFixed(2));
     if (rounded == rounded.roundToDouble()) {

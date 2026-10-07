@@ -17,6 +17,7 @@ class RootScreen extends ConsumerStatefulWidget {
 }
 
 class _RootScreenState extends ConsumerState<RootScreen> {
+  static const int _favoritesIndex = 1;
   static const int _historyIndex = 2;
 
   int _index = 0;
@@ -29,59 +30,103 @@ class _RootScreenState extends ConsumerState<RootScreen> {
     // the app name there instead of repeating it.
     final titles = [l10n.appTitle, l10n.navFavorites, l10n.navHistory];
 
-    // Clear lives in the bar rather than under the list, so it stays put
-    // while the user switches between the Done and Cancelled tabs -- it
-    // clears both. Hidden when there is nothing to clear.
-    final showClear =
-        _index == _historyIndex && ref.watch(historyProvider).isNotEmpty;
+    // While rows are selected on the favorites or history tab, the bar
+    // becomes the selection's bar: it holds the delete action so it stays put
+    // however far the list is scrolled.
+    final historySelection = ref.watch(historySelectionProvider);
+    final historySelector = ref.read(historySelectionProvider.notifier);
+    final favoritesSelection = ref.watch(favoritesSelectionProvider);
+    final favoritesSelector = ref.read(favoritesSelectionProvider.notifier);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(titles[_index]),
-        actions: [
-          if (showClear)
-            IconButton(
-              icon: const Icon(Icons.delete_sweep_outlined, size: 26),
-              tooltip: l10n.clearHistory,
-              onPressed: () => HistoryScreen.confirmClear(context, ref),
+    final onFavorites = _index == _favoritesIndex;
+    final selectedCount = switch (_index) {
+      _favoritesIndex => favoritesSelection.length,
+      _historyIndex => historySelection.ids.length,
+      _ => 0,
+    };
+    final selecting = selectedCount > 0;
+    final clearSelection = onFavorites
+        ? favoritesSelector.clear
+        : historySelector.clear;
+
+    return PopScope(
+      // Back leaves selection first, as in any Android list.
+      canPop: !selecting,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) clearSelection();
+      },
+      child: Scaffold(
+        appBar: selecting
+            ? AppBar(
+                leading: IconButton(
+                  icon: const Icon(Icons.close_rounded, size: 26),
+                  tooltip: l10n.cancelSelection,
+                  onPressed: clearSelection,
+                ),
+                title: Text(l10n.selectedCount(selectedCount)),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.select_all_rounded, size: 26),
+                    tooltip: l10n.selectAll,
+                    onPressed: onFavorites
+                        ? favoritesSelector.selectAll
+                        : historySelector.selectAll,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline_rounded, size: 26),
+                    tooltip: l10n.delete,
+                    onPressed: () => onFavorites
+                        ? FavoritesScreen.deleteSelected(context, ref)
+                        : HistoryScreen.deleteSelected(context, ref),
+                  ),
+                  const SizedBox(width: 4),
+                ],
+              )
+            : AppBar(
+                title: Text(titles[_index]),
+                leading: IconButton(
+                  icon: const Icon(Icons.settings_outlined, size: 26),
+                  tooltip: l10n.settings,
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const SettingsScreen(),
+                    ),
+                  ),
+                ),
+              ),
+        // IndexedStack keeps each tab's scroll position without rebuilding.
+        body: IndexedStack(
+          index: _index,
+          children: const [HomeScreen(), FavoritesScreen(), HistoryScreen()],
+        ),
+        // Sizing, colours and label behaviour come from the theme's
+        // navigationBarTheme so this stays a list of destinations.
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: _index,
+          onDestinationSelected: (index) {
+            // Leaving a tab ends its selection.
+            if (index != _favoritesIndex) favoritesSelector.clear();
+            if (index != _historyIndex) historySelector.clear();
+            setState(() => _index = index);
+          },
+          destinations: [
+            NavigationDestination(
+              icon: const Icon(Icons.payments_outlined),
+              selectedIcon: const Icon(Icons.payments_rounded),
+              label: l10n.navHome,
             ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined, size: 26),
-            tooltip: l10n.settings,
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
+            NavigationDestination(
+              icon: const Icon(Icons.star_outline_rounded),
+              selectedIcon: const Icon(Icons.star_rounded),
+              label: l10n.navFavorites,
             ),
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
-      // IndexedStack keeps each tab's scroll position without rebuilding.
-      body: IndexedStack(
-        index: _index,
-        children: const [HomeScreen(), FavoritesScreen(), HistoryScreen()],
-      ),
-      // Sizing, colours and label behaviour come from the theme's
-      // navigationBarTheme so this stays a list of destinations.
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (index) => setState(() => _index = index),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.payments_outlined),
-            selectedIcon: const Icon(Icons.payments_rounded),
-            label: l10n.navHome,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.star_outline_rounded),
-            selectedIcon: const Icon(Icons.star_rounded),
-            label: l10n.navFavorites,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.history_rounded),
-            selectedIcon: const Icon(Icons.history_rounded),
-            label: l10n.navHistory,
-          ),
-        ],
+            NavigationDestination(
+              icon: const Icon(Icons.history_rounded),
+              selectedIcon: const Icon(Icons.history_rounded),
+              label: l10n.navHistory,
+            ),
+          ],
+        ),
       ),
     );
   }

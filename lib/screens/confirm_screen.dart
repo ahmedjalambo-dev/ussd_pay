@@ -78,7 +78,9 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
   Future<void> _showDecisionNotification(HistoryEntry entry) async {
     final l10n = AppLocalizations.of(context);
     final localeCode = ref.read(settingsProvider).locale?.languageCode ?? 'ar';
-    await ref.read(notificationServiceProvider).showPaymentDecision(
+    await ref
+        .read(notificationServiceProvider)
+        .showPaymentDecision(
           historyEntryId: entry.id,
           title: l10n.notifPaymentDecisionTitle,
           body: l10n.notifPaymentDecisionBody(

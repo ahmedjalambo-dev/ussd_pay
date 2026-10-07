@@ -191,11 +191,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get delete => 'حذف';
 
   @override
-  String get deleteFavoriteTitle => 'حذف هذا المستلم؟';
-
-  @override
-  String deleteFavoriteMessage(String name) {
-    return 'سيتم حذف $name من المفضلة.';
+  String favoritesDeleted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تم حذف $count مستلمين',
+      two: 'تم حذف مستلمَين',
+      one: 'تم حذف مستلم واحد',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -235,7 +239,36 @@ class AppLocalizationsAr extends AppLocalizations {
       'ستظهر هنا الدفعات التي ألغيتها أو لم تؤكدها.';
 
   @override
-  String get historyEntryDeleted => 'تم حذف الدفعة';
+  String historyEntriesDeleted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تم حذف $count دفعات',
+      two: 'تم حذف دفعتين',
+      one: 'تم حذف دفعة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String selectedCount(int count) {
+    return 'تم تحديد $count';
+  }
+
+  @override
+  String get selectAll => 'تحديد الكل';
+
+  @override
+  String get cancelSelection => 'إلغاء التحديد';
+
+  @override
+  String get paymentDetails => 'تفاصيل الدفعة';
+
+  @override
+  String get data => 'البيانات';
+
+  @override
+  String get historyCleared => 'تم مسح السجل';
 
   @override
   String get undo => 'تراجع';

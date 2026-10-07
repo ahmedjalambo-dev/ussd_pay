@@ -27,7 +27,9 @@ class WalletRepository {
       throw WalletConfigException('$assetPath is not valid JSON: ${e.message}');
     }
     if (decoded is! Map<String, dynamic>) {
-      throw const WalletConfigException('$assetPath must contain a JSON object.');
+      throw const WalletConfigException(
+        '$assetPath must contain a JSON object.',
+      );
     }
     return WalletConfig.fromJson(decoded);
   }

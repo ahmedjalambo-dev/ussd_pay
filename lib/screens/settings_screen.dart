@@ -57,9 +57,15 @@ class SettingsScreen extends ConsumerWidget {
                 },
                 child: const Column(
                   children: [
-                    _ThemeTile(value: ThemeMode.dark, icon: Icons.dark_mode_outlined),
+                    _ThemeTile(
+                      value: ThemeMode.dark,
+                      icon: Icons.dark_mode_outlined,
+                    ),
                     Divider(indent: AppTheme.gapLg, endIndent: AppTheme.gapLg),
-                    _ThemeTile(value: ThemeMode.light, icon: Icons.light_mode_outlined),
+                    _ThemeTile(
+                      value: ThemeMode.light,
+                      icon: Icons.light_mode_outlined,
+                    ),
                     Divider(indent: AppTheme.gapLg, endIndent: AppTheme.gapLg),
                     _ThemeTile(
                       value: ThemeMode.system,
@@ -70,6 +76,9 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: AppTheme.gapXl),
+            _SectionHeader(title: l10n.data),
+            const _SettingsCard(child: _ClearHistoryTile()),
+            const SizedBox(height: AppTheme.gapXl),
             _SectionHeader(title: l10n.about),
             _SettingsCard(
               child: Padding(
@@ -77,11 +86,19 @@ class SettingsScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _AboutLine(icon: Icons.wifi_off_rounded, text: l10n.aboutOffline),
+                    _AboutLine(
+                      icon: Icons.wifi_off_rounded,
+                      text: l10n.aboutOffline,
+                    ),
                     const SizedBox(height: AppTheme.gapLg),
-                    _AboutLine(icon: Icons.lock_outline_rounded, text: l10n.aboutNoPin),
+                    _AboutLine(
+                      icon: Icons.lock_outline_rounded,
+                      text: l10n.aboutNoPin,
+                    ),
                     const SizedBox(height: AppTheme.gapLg),
-                    Divider(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+                    Divider(
+                      color: scheme.outlineVariant.withValues(alpha: 0.5),
+                    ),
                     const SizedBox(height: AppTheme.gapMd),
                     Text(l10n.appTitle, style: theme.textTheme.labelSmall),
                   ],
@@ -138,6 +155,66 @@ class _ThemeTile extends StatelessWidget {
   }
 }
 
+/// Wipes every history row in both tabs. Lives here rather than on the
+/// history screen: it is rare and irreversible, so it sits away from the
+/// everyday list, behind a confirmation.
+class _ClearHistoryTile extends ConsumerWidget {
+  const _ClearHistoryTile();
+
+  Future<void> _confirmClear(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.clearHistory),
+        content: Text(l10n.clearHistoryMessage),
+        actions: [
+          TextButton(
+            style: TextButton.styleFrom(minimumSize: AppTheme.dialogActionSize),
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              minimumSize: AppTheme.dialogActionSize,
+            ),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.clear),
+          ),
+        ],
+      ),
+    );
+    if (confirmed ?? false) {
+      await ref.read(historyProvider.notifier).clear();
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l10n.historyCleared)));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final hasAny = ref.watch(historyProvider).isNotEmpty;
+
+    return ListTile(
+      enabled: hasAny,
+      contentPadding: const EdgeInsets.symmetric(horizontal: AppTheme.gapLg),
+      iconColor: theme.colorScheme.error,
+      textColor: theme.colorScheme.error,
+      leading: const Icon(Icons.delete_sweep_outlined, size: 24),
+      title: Text(l10n.clearHistory, style: theme.textTheme.titleSmall),
+      subtitle: Text(
+        l10n.clearHistoryMessage,
+        style: theme.textTheme.bodySmall,
+      ),
+      onTap: () => _confirmClear(context, ref),
+    );
+  }
+}
+
 class _SettingsCard extends StatelessWidget {
   const _SettingsCard({required this.child});
 
@@ -149,13 +226,10 @@ class _SettingsCard extends StatelessWidget {
   // is what Flutter's "ink splashes may be invisible" assertion warns about.
   @override
   Widget build(BuildContext context) => Container(
-        decoration: AppTheme.surface(context),
-        clipBehavior: Clip.antiAlias,
-        child: Material(
-          type: MaterialType.transparency,
-          child: child,
-        ),
-      );
+    decoration: AppTheme.surface(context),
+    clipBehavior: Clip.antiAlias,
+    child: Material(type: MaterialType.transparency, child: child),
+  );
 }
 
 class _SectionHeader extends StatelessWidget {

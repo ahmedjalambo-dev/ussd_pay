@@ -81,7 +81,14 @@ class StorageService {
   Future<void> saveFavorite(Favorite favorite) =>
       _favorites.put(favorite.id, favorite.toMap());
 
-  Future<void> deleteFavorite(String id) => _favorites.delete(id);
+  Future<void> deleteFavorites(Iterable<String> ids) =>
+      _favorites.deleteAll(ids);
+
+  /// Puts deleted favorites back for Undo. Hive orders string keys and ids
+  /// are time-prefixed, so restoring the same ids puts the rows back in the
+  /// same place in the list.
+  Future<void> restoreFavorites(Iterable<Favorite> favorites) =>
+      _favorites.putAll({for (final f in favorites) f.id: f.toMap()});
 
   /// Finds a saved recipient by normalized number and wallet, so the payment
   /// screen can show a name instead of a bare number.
@@ -121,6 +128,16 @@ class StorageService {
   }
 
   Future<void> deleteHistoryEntry(String id) => _history.delete(id);
+
+  Future<void> deleteHistoryEntries(Iterable<String> ids) =>
+      _history.deleteAll(ids);
+
+  /// Puts deleted rows back exactly as they were (same id, timestamp and
+  /// status), for Undo after a bulk delete.
+  Future<void> restoreHistoryEntries(Iterable<HistoryEntry> entries) async {
+    await _history.putAll({for (final e in entries) e.id: e.toMap()});
+    await _trimHistory();
+  }
 
   Future<void> clearHistory() => _history.clear();
 

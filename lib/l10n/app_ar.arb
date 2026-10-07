@@ -73,10 +73,9 @@
   "favoriteNameLabel": "الاسم",
   "save": "حفظ",
   "delete": "حذف",
-  "deleteFavoriteTitle": "حذف هذا المستلم؟",
-  "deleteFavoriteMessage": "سيتم حذف {name} من المفضلة.",
-  "@deleteFavoriteMessage": {
-    "placeholders": { "name": { "type": "String" } }
+  "favoritesDeleted": "{count, plural, =1{تم حذف مستلم واحد} =2{تم حذف مستلمَين} other{تم حذف {count} مستلمين}}",
+  "@favoritesDeleted": {
+    "placeholders": { "count": { "type": "int" } }
   },
   "repeatPayment": "تكرار",
   "clearHistory": "مسح السجل",
@@ -88,7 +87,19 @@
   "emptyDoneBody": "ستظهر هنا الدفعات التي تؤكد إتمامها.",
   "emptyCancelledTitle": "لا توجد دفعات ملغاة",
   "emptyCancelledBody": "ستظهر هنا الدفعات التي ألغيتها أو لم تؤكدها.",
-  "historyEntryDeleted": "تم حذف الدفعة",
+  "historyEntriesDeleted": "{count, plural, =1{تم حذف دفعة واحدة} =2{تم حذف دفعتين} other{تم حذف {count} دفعات}}",
+  "@historyEntriesDeleted": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "selectedCount": "تم تحديد {count}",
+  "@selectedCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "selectAll": "تحديد الكل",
+  "cancelSelection": "إلغاء التحديد",
+  "paymentDetails": "تفاصيل الدفعة",
+  "data": "البيانات",
+  "historyCleared": "تم مسح السجل",
   "undo": "تراجع",
 
   "language": "اللغة",

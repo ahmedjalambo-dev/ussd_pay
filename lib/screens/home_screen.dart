@@ -123,8 +123,11 @@ class _ConfigError extends StatelessWidget {
               color: scheme.errorContainer,
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.error_outline_rounded,
-                size: 48, color: scheme.onErrorContainer),
+            child: Icon(
+              Icons.error_outline_rounded,
+              size: 48,
+              color: scheme.onErrorContainer,
+            ),
           ),
           const SizedBox(height: AppTheme.gapXl),
           Text(

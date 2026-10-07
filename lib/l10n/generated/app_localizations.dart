@@ -438,17 +438,11 @@ abstract class AppLocalizations {
   /// **'Delete'**
   String get delete;
 
-  /// No description provided for @deleteFavoriteTitle.
+  /// No description provided for @favoritesDeleted.
   ///
   /// In en, this message translates to:
-  /// **'Delete this recipient?'**
-  String get deleteFavoriteTitle;
-
-  /// No description provided for @deleteFavoriteMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'{name} will be removed from your favorites.'**
-  String deleteFavoriteMessage(String name);
+  /// **'{count, plural, =1{1 recipient deleted} other{{count} recipients deleted}}'**
+  String favoritesDeleted(int count);
 
   /// No description provided for @repeatPayment.
   ///
@@ -510,11 +504,47 @@ abstract class AppLocalizations {
   /// **'Payments you cancel or leave unanswered will be listed here.'**
   String get emptyCancelledBody;
 
-  /// No description provided for @historyEntryDeleted.
+  /// No description provided for @historyEntriesDeleted.
   ///
   /// In en, this message translates to:
-  /// **'Payment deleted'**
-  String get historyEntryDeleted;
+  /// **'{count, plural, =1{1 payment deleted} other{{count} payments deleted}}'**
+  String historyEntriesDeleted(int count);
+
+  /// No description provided for @selectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String selectedCount(int count);
+
+  /// No description provided for @selectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get selectAll;
+
+  /// No description provided for @cancelSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel selection'**
+  String get cancelSelection;
+
+  /// No description provided for @paymentDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment details'**
+  String get paymentDetails;
+
+  /// No description provided for @data.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get data;
+
+  /// No description provided for @historyCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'History cleared'**
+  String get historyCleared;
 
   /// No description provided for @undo.
   ///

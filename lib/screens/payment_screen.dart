@@ -305,9 +305,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     hintText: l10n.notesHint,
                     prefixIcon: const Icon(Icons.notes_rounded),
                   ),
-                  onChanged: (value) => ref
-                      .read(paymentDraftProvider.notifier)
-                      .setNote(value),
+                  onChanged: (value) =>
+                      ref.read(paymentDraftProvider.notifier).setNote(value),
                 ),
               ),
               const SizedBox(height: AppTheme.gapXxl),

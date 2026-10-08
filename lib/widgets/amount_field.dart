@@ -15,12 +15,22 @@ class AmountField extends StatelessWidget {
     super.key,
     required this.controller,
     required this.onChanged,
+    this.focusNode,
+    this.autofocus = false,
+    this.textInputAction,
+    this.onSubmitted,
   });
 
   static const List<int> quickAmounts = [10, 20, 50, 100];
 
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
+
+  /// Keyboard flow for forms where the amount is one field of several.
+  final FocusNode? focusNode;
+  final bool autofocus;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onSubmitted;
 
   /// Strips the display formatting and returns the raw number, or `null`.
   static num? parse(String displayed) {
@@ -45,6 +55,10 @@ class AmountField extends StatelessWidget {
         TextField(
           controller: controller,
           onChanged: onChanged,
+          focusNode: focusNode,
+          autofocus: autofocus,
+          textInputAction: textInputAction,
+          onSubmitted: onSubmitted,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           textDirection: TextDirection.ltr,
           textAlign: isRtl ? TextAlign.right : TextAlign.left,

@@ -9,6 +9,7 @@ import '../providers/app_providers.dart';
 import '../services/contact_picker_service.dart';
 import '../services/phone_normalizer.dart';
 import '../theme/app_theme.dart';
+import '../widgets/choice_tile.dart';
 import '../widgets/form_section.dart';
 import '../widgets/phone_field.dart';
 import '../widgets/recipient_type_toggle.dart';
@@ -246,11 +247,16 @@ class _AddFavoriteScreenState extends ConsumerState<AddFavoriteScreen> {
                   const SizedBox(height: AppTheme.gapXl),
                   FormSection(
                     title: l10n.walletLabel,
-                    child: _WalletGrid(
-                      wallets: wallets,
-                      selected: wallet,
-                      localeCode: localeCode,
-                      onSelected: (w) => setState(() => _walletId = w.id),
+                    child: ChoiceTileRows(
+                      children: [
+                        for (final w in wallets)
+                          WalletChoiceTile(
+                            wallet: w,
+                            localeCode: localeCode,
+                            selected: w.id == wallet.id,
+                            onTap: () => setState(() => _walletId = w.id),
+                          ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: AppTheme.gapXl),
@@ -273,47 +279,6 @@ class _AddFavoriteScreenState extends ConsumerState<AddFavoriteScreen> {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// Wallet tiles two to a row, so a wallet added to `wallets.json` wraps onto
-/// a new row with no code change.
-class _WalletGrid extends StatelessWidget {
-  const _WalletGrid({
-    required this.wallets,
-    required this.selected,
-    required this.localeCode,
-    required this.onSelected,
-  });
-
-  final List<Wallet> wallets;
-  final Wallet selected;
-  final String localeCode;
-  final ValueChanged<Wallet> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = (constraints.maxWidth - AppTheme.gapMd) / 2;
-        return Wrap(
-          spacing: AppTheme.gapMd,
-          runSpacing: AppTheme.gapMd,
-          children: [
-            for (final w in wallets)
-              SizedBox(
-                width: width,
-                child: WalletChoiceTile(
-                  wallet: w,
-                  localeCode: localeCode,
-                  selected: w.id == selected.id,
-                  onTap: () => onSelected(w),
-                ),
-              ),
-          ],
-        );
-      },
     );
   }
 }

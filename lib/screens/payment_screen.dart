@@ -29,6 +29,14 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   final _phoneController = TextEditingController();
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
+  final _amountFocus = FocusNode();
+  final _noteFocus = FocusNode();
+
+  /// Which field the keyboard opens on: the first one still empty, so a
+  /// payment started from a favorite lands on the amount. Fixed in initState
+  /// because autofocus only acts on first mount anyway.
+  bool _autofocusPhone = false;
+  bool _autofocusAmount = false;
 
   /// Errors stay hidden until the user has typed something or tried to
   /// continue, so the screen does not open already scolding them.
@@ -49,6 +57,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     }
     _noteController.text = draft.note;
     _showPhoneIssue = draft.rawPhoneInput.isNotEmpty;
+    _autofocusPhone = _phoneController.text.isEmpty;
+    _autofocusAmount = !_autofocusPhone && _amountController.text.isEmpty;
   }
 
   @override
@@ -56,6 +66,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     _phoneController.dispose();
     _amountController.dispose();
     _noteController.dispose();
+    _amountFocus.dispose();
+    _noteFocus.dispose();
     super.dispose();
   }
 
@@ -266,6 +278,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                   normalized: normalized,
                   recipientName: draft.recipientName,
                   showIssue: _showPhoneIssue,
+                  autofocus: _autofocusPhone,
+                  textInputAction: TextInputAction.next,
+                  onSubmitted: (_) => _amountFocus.requestFocus(),
                   onChanged: (value) {
                     ref
                         .read(paymentDraftProvider.notifier)
@@ -282,6 +297,10 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 title: l10n.amountLabel,
                 child: AmountField(
                   controller: _amountController,
+                  focusNode: _amountFocus,
+                  autofocus: _autofocusAmount,
+                  textInputAction: TextInputAction.next,
+                  onSubmitted: (_) => _noteFocus.requestFocus(),
                   onChanged: (value) {
                     final amount = AmountField.parse(value);
                     ref
@@ -297,9 +316,13 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 title: l10n.notesLabel,
                 child: TextField(
                   controller: _noteController,
+                  focusNode: _noteFocus,
                   maxLength: 60,
                   maxLines: 1,
                   textInputAction: TextInputAction.done,
+                  // Same as tapping Review: it validates, then only opens the
+                  // Confirm screen. Nothing is dialed from the keyboard.
+                  onSubmitted: (_) => _review(),
                   // No textDirection override: user-supplied free text, so the
                   // field auto-picks per input (Arabic reads RTL, Latin LTR).
                   decoration: InputDecoration(

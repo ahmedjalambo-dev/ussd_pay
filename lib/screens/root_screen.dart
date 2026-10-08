@@ -93,17 +93,18 @@ class _RootScreenState extends ConsumerState<RootScreen> {
                     ),
                   ),
                 ),
+                actions: [
+                  // Only on a non-empty favorites list: an empty one shows its
+                  // own Add button in the empty state.
+                  if (onFavorites && ref.watch(favoritesProvider).isNotEmpty)
+                    IconButton(
+                      icon: const Icon(Icons.add_rounded, size: 26),
+                      tooltip: l10n.addFavorite,
+                      onPressed: () => FavoritesScreen.openAdd(context),
+                    ),
+                  const SizedBox(width: 4),
+                ],
               ),
-        // Only on a non-empty favorites list: an empty one shows its own Add
-        // button, and while selecting the bar's actions are the only ones.
-        floatingActionButton:
-            onFavorites && !selecting && ref.watch(favoritesProvider).isNotEmpty
-            ? FloatingActionButton(
-                tooltip: l10n.addFavorite,
-                onPressed: () => FavoritesScreen.openAdd(context),
-                child: const Icon(Icons.add_rounded, size: 28),
-              )
-            : null,
         // IndexedStack keeps each tab's scroll position without rebuilding.
         body: IndexedStack(
           index: _index,

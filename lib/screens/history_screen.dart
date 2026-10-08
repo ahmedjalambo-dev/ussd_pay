@@ -56,10 +56,17 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen>
     with SingleTickerProviderStateMixin {
   static const _tabs = [HistoryStatus.done, HistoryStatus.cancelled];
 
-  late final TabController _tabController = TabController(
-    length: _tabs.length,
-    vsync: this,
-  )..addListener(_onTabChanged);
+  // Created in initState, not as a lazy `late final`: with empty history the
+  // TabBar is never built, so the first touch would be dispose() itself,
+  // creating a ticker on an already-deactivated element.
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: _tabs.length, vsync: this)
+      ..addListener(_onTabChanged);
+  }
 
   void _onTabChanged() {
     ref

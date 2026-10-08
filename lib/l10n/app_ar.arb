@@ -73,6 +73,12 @@
   "favoriteNameLabel": "الاسم",
   "save": "حفظ",
   "delete": "حذف",
+  "recipientTypeSection": "نوع المستلم",
+  "addFavorite": "إضافة مفضلة",
+  "favoriteAlreadyExists": "هذا الرقم محفوظ مسبقاً باسم {name}",
+  "@favoriteAlreadyExists": {
+    "placeholders": { "name": { "type": "String" } }
+  },
   "favoritesDeleted": "{count, plural, =1{تم حذف مستلم واحد} =2{تم حذف مستلمَين} other{تم حذف {count} مستلمين}}",
   "@favoritesDeleted": {
     "placeholders": { "count": { "type": "int" } }

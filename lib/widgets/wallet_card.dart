@@ -5,42 +5,49 @@ import '../l10n/generated/app_localizations.dart';
 import '../models/wallet.dart';
 import '../theme/app_theme.dart';
 
-const double _markSize = 56;
-
-/// The brand mark shown at the leading edge of a [WalletCard].
+/// A wallet's brand mark: on a [WalletCard], and on the add-favorite wallet
+/// tiles.
 ///
 /// Prefers the bundled brand image declared in `wallets.json`; falls back to a
 /// generic wallet icon on a translucent circle when a wallet has no `icon`.
 /// The image is clipped to a circle and given a hairline overlay so it reads
 /// as an inset badge on the coloured card rather than a flat sticker.
-class _WalletMark extends StatelessWidget {
-  const _WalletMark({required this.wallet, required this.onBrand});
+class WalletMark extends StatelessWidget {
+  const WalletMark({
+    super.key,
+    required this.wallet,
+    required this.onBrand,
+    this.size = 56,
+  });
 
   final Wallet wallet;
+
+  /// Tint for the fallback icon and its circle.
   final Color onBrand;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     final asset = wallet.iconAsset;
     if (asset == null) {
       return Container(
-        width: _markSize,
-        height: _markSize,
+        width: size,
+        height: size,
         decoration: BoxDecoration(
           color: onBrand.withValues(alpha: 0.18),
           shape: BoxShape.circle,
         ),
         child: Icon(
           Icons.account_balance_wallet_rounded,
-          size: 30,
+          size: size * 0.54,
           color: onBrand,
         ),
       );
     }
 
     return Container(
-      width: _markSize,
-      height: _markSize,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         // shape: BoxShape.circle,
         // border: Border.all(color: onBrand.withValues(alpha: 0.25), width: 1),
@@ -49,8 +56,8 @@ class _WalletMark extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: Image.asset(
         asset,
-        width: _markSize,
-        height: _markSize,
+        width: size,
+        height: size,
         fit: BoxFit.cover,
         // A missing asset must not crash the home screen; fall back to the
         // generic tinted icon instead.
@@ -59,7 +66,7 @@ class _WalletMark extends StatelessWidget {
           alignment: Alignment.center,
           child: Icon(
             Icons.account_balance_wallet_rounded,
-            size: 30,
+            size: size * 0.54,
             color: onBrand,
           ),
         ),
@@ -143,7 +150,7 @@ class WalletCard extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    _WalletMark(wallet: wallet, onBrand: onBrand),
+                    WalletMark(wallet: wallet, onBrand: onBrand),
                     const SizedBox(width: AppTheme.gapLg),
                     Expanded(
                       child: Column(

@@ -142,6 +142,16 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
   Future<void> _saveFavorite() async {
     final l10n = AppLocalizations.of(context);
 
+    // Checked before asking for a name, so the user is not made to type one
+    // only to be told the recipient is already saved.
+    final existing = ref
+        .read(favoritesProvider.notifier)
+        .existing(number: widget.phone.local, walletId: widget.wallet.id);
+    if (existing != null) {
+      _snack(l10n.favoriteAlreadyExists(existing.name));
+      return;
+    }
+
     // The dialog owns its own controller and disposes it itself. Doing that
     // here, right after the await, tore the controller down while the dialog
     // was still animating out and still using it.

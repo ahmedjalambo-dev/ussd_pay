@@ -9,11 +9,17 @@ class EmptyState extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.body,
+    this.actionLabel,
+    this.onAction,
   });
 
   final IconData icon;
   final String title;
   final String body;
+
+  /// Optional call to action, e.g. "Add favorite". Shown only with [onAction].
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +53,19 @@ class EmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: AppTheme.gapXl),
+              // Sized to its label: the theme's full-width minimum would
+              // stretch it across the padded column.
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(0, AppTheme.touchTarget),
+                ),
+                onPressed: onAction,
+                icon: const Icon(Icons.add_rounded),
+                label: Text(actionLabel!),
+              ),
+            ],
           ],
         ),
       ),

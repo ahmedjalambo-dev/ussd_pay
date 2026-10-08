@@ -11,6 +11,7 @@ import '../services/phone_normalizer.dart';
 import '../services/ussd_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/amount_field.dart';
+import '../widgets/form_section.dart';
 import '../widgets/phone_field.dart';
 import '../widgets/recipient_type_toggle.dart';
 import 'confirm_screen.dart';
@@ -245,7 +246,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               AppTheme.gapXl,
             ),
             children: [
-              _Section(
+              FormSection(
                 step: '1',
                 title: l10n.recipientTypeQuestion,
                 child: RecipientTypeToggle(
@@ -257,7 +258,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 ),
               ),
               const SizedBox(height: AppTheme.gapXl),
-              _Section(
+              FormSection(
                 step: '2',
                 title: l10n.phoneNumberLabel,
                 child: PhoneField(
@@ -276,7 +277,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 ),
               ),
               const SizedBox(height: AppTheme.gapXl),
-              _Section(
+              FormSection(
                 step: '3',
                 title: l10n.amountLabel,
                 child: AmountField(
@@ -291,7 +292,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 ),
               ),
               const SizedBox(height: AppTheme.gapXl),
-              _Section(
+              FormSection(
                 step: '4',
                 title: l10n.notesLabel,
                 child: TextField(
@@ -324,59 +325,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// One numbered step of the payment form, on its own card.
-class _Section extends StatelessWidget {
-  const _Section({
-    required this.step,
-    required this.title,
-    required this.child,
-  });
-
-  final String step;
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.gapLg),
-      decoration: AppTheme.surface(context),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 26,
-                height: 26,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: scheme.primary,
-                  shape: BoxShape.circle,
-                ),
-                child: Text(
-                  step,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: scheme.onPrimary,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppTheme.gapMd),
-              Expanded(child: Text(title, style: theme.textTheme.titleMedium)),
-            ],
-          ),
-          const SizedBox(height: AppTheme.gapLg),
-          child,
-        ],
       ),
     );
   }

@@ -7,12 +7,17 @@ import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/favorite_tile.dart';
+import 'add_favorite_screen.dart';
 import 'payment_screen.dart';
 
 /// Saved recipients, in the same compact style as history. Long-press starts
 /// selecting; while selecting, a tap toggles a row instead of opening it.
 class FavoritesScreen extends ConsumerWidget {
   const FavoritesScreen({super.key});
+
+  /// Public so the root shell's floating button can open it too.
+  static Future<void> openAdd(BuildContext context) => Navigator.of(context)
+      .push(MaterialPageRoute<void>(builder: (_) => const AddFavoriteScreen()));
 
   /// Deletes every selected favorite at once and offers Undo, rather than
   /// asking first, as history does: selecting and pressing delete is already
@@ -62,11 +67,15 @@ class FavoritesScreen extends ConsumerWidget {
         icon: Icons.star_outline_rounded,
         title: l10n.emptyFavoritesTitle,
         body: l10n.emptyFavoritesBody,
+        actionLabel: l10n.addFavorite,
+        onAction: () => openAdd(context),
       );
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.symmetric(vertical: AppTheme.gapSm),
+      // Extra room at the bottom so the root shell's floating Add button
+      // never sits over the last row.
+      padding: const EdgeInsets.only(top: AppTheme.gapSm, bottom: 88),
       itemCount: favorites.length,
       separatorBuilder: (_, _) => const Divider(
         height: 1,

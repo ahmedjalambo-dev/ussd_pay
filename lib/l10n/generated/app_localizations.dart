@@ -438,6 +438,24 @@ abstract class AppLocalizations {
   /// **'Delete'**
   String get delete;
 
+  /// No description provided for @recipientTypeSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient type'**
+  String get recipientTypeSection;
+
+  /// No description provided for @addFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Add favorite'**
+  String get addFavorite;
+
+  /// No description provided for @favoriteAlreadyExists.
+  ///
+  /// In en, this message translates to:
+  /// **'This number is already saved as {name}'**
+  String favoriteAlreadyExists(String name);
+
   /// No description provided for @favoritesDeleted.
   ///
   /// In en, this message translates to:

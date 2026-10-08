@@ -103,6 +103,14 @@ class FavoritesNotifier extends Notifier<List<Favorite>> {
     _refresh();
   }
 
+  /// The saved favorite for this number on this wallet, if any. Used to refuse
+  /// duplicates: two rows for one recipient would only differ by name, and
+  /// the picker would offer both.
+  Favorite? existing({required String number, required String walletId}) =>
+      state
+          .where((f) => f.number == number && f.walletId == walletId)
+          .firstOrNull;
+
   Future<void> deleteMany(Iterable<String> ids) async {
     await ref.read(storageServiceProvider).deleteFavorites(ids);
     _refresh();

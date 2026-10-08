@@ -191,6 +191,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get delete => 'حذف';
 
   @override
+  String get recipientTypeSection => 'نوع المستلم';
+
+  @override
+  String get addFavorite => 'إضافة مفضلة';
+
+  @override
+  String favoriteAlreadyExists(String name) {
+    return 'هذا الرقم محفوظ مسبقاً باسم $name';
+  }
+
+  @override
   String favoritesDeleted(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

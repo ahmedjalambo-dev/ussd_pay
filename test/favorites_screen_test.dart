@@ -6,6 +6,7 @@ import 'package:ussd_pay/l10n/generated/app_localizations.dart';
 import 'package:ussd_pay/models/favorite.dart';
 import 'package:ussd_pay/models/wallet.dart';
 import 'package:ussd_pay/providers/app_providers.dart';
+import 'package:ussd_pay/screens/add_favorite_screen.dart';
 import 'package:ussd_pay/screens/favorites_screen.dart';
 import 'package:ussd_pay/screens/payment_screen.dart';
 
@@ -123,6 +124,14 @@ void main() {
 
   List<String> names() =>
       container.read(favoritesProvider).map((f) => f.name).toList();
+
+  testWidgets('the empty state offers Add favorite', (tester) async {
+    await pump(tester, const []);
+
+    await tester.tap(find.text('Add favorite'));
+    await tester.pumpAndSettle();
+    expect(find.byType(AddFavoriteScreen), findsOneWidget);
+  });
 
   testWidgets('rows show number, wallet and type', (tester) async {
     await pump(tester, [_favorite('a', 'Alice')]);

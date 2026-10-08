@@ -17,20 +17,30 @@ class PhoneField extends StatelessWidget {
     required this.normalized,
     required this.onChanged,
     required this.onPickContact,
-    required this.onPickFavorite,
+    this.onPickFavorite,
     this.recipientName,
     this.showIssue = true,
+    this.autofocus = false,
+    this.textInputAction,
+    this.onSubmitted,
   });
 
   final TextEditingController controller;
   final NormalizedPhone normalized;
   final ValueChanged<String> onChanged;
   final VoidCallback onPickContact;
-  final VoidCallback onPickFavorite;
+
+  /// Null hides the Favorites picker, e.g. on the add-favorite screen itself.
+  final VoidCallback? onPickFavorite;
   final String? recipientName;
 
   /// Suppressed until the user has actually entered something.
   final bool showIssue;
+
+  /// Keyboard flow for forms where the number is one field of several.
+  final bool autofocus;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onSubmitted;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +48,9 @@ class PhoneField extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isRtl = Directionality.of(context) == TextDirection.rtl;
-    final issueText = showIssue ? phoneIssueMessage(l10n, normalized.issue) : null;
+    final issueText = showIssue
+        ? phoneIssueMessage(l10n, normalized.issue)
+        : null;
     final warnOnly = isWarningOnly(normalized.issue);
     final issueColor = warnOnly ? AppTheme.warning : scheme.error;
 
@@ -53,6 +65,9 @@ class PhoneField extends StatelessWidget {
         TextField(
           controller: controller,
           onChanged: onChanged,
+          autofocus: autofocus,
+          textInputAction: textInputAction,
+          onSubmitted: onSubmitted,
           keyboardType: TextInputType.phone,
           textDirection: TextDirection.ltr,
           textAlign: isRtl ? TextAlign.right : TextAlign.left,
@@ -68,7 +83,11 @@ class PhoneField extends StatelessWidget {
             // The hint is a number pattern, so it stays LTR even though the
             // label beside it is Arabic.
             hintTextDirection: TextDirection.ltr,
-            prefixIcon: Icon(Icons.phone_outlined, size: 24, color: scheme.primary),
+            prefixIcon: Icon(
+              Icons.phone_outlined,
+              size: 24,
+              color: scheme.primary,
+            ),
           ),
         ),
         const SizedBox(height: AppTheme.gapMd),
@@ -88,14 +107,16 @@ class PhoneField extends StatelessWidget {
                 onPressed: onPickContact,
               ),
             ),
-            const SizedBox(width: AppTheme.gapMd),
-            Expanded(
-              child: _PickerButton(
-                icon: Icons.star_outline_rounded,
-                label: l10n.pickFromFavorites,
-                onPressed: onPickFavorite,
+            if (onPickFavorite case final onPickFavorite?) ...[
+              const SizedBox(width: AppTheme.gapMd),
+              Expanded(
+                child: _PickerButton(
+                  icon: Icons.star_outline_rounded,
+                  label: l10n.pickFromFavorites,
+                  onPressed: onPickFavorite,
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ],
@@ -228,7 +249,11 @@ class _Feedback extends StatelessWidget {
           const SizedBox(height: AppTheme.gapSm),
           Row(
             children: [
-              Icon(Icons.person_outline, size: 18, color: scheme.onSurfaceVariant),
+              Icon(
+                Icons.person_outline,
+                size: 18,
+                color: scheme.onSurfaceVariant,
+              ),
               const SizedBox(width: AppTheme.gapSm),
               Expanded(
                 child: Text(

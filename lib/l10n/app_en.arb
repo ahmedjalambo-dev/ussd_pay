@@ -73,6 +73,12 @@
   "favoriteNameLabel": "Name",
   "save": "Save",
   "delete": "Delete",
+  "recipientTypeSection": "Recipient type",
+  "addFavorite": "Add favorite",
+  "favoriteAlreadyExists": "This number is already saved as {name}",
+  "@favoriteAlreadyExists": {
+    "placeholders": { "name": { "type": "String" } }
+  },
   "favoritesDeleted": "{count, plural, =1{1 recipient deleted} other{{count} recipients deleted}}",
   "@favoritesDeleted": {
     "placeholders": { "count": { "type": "int" } }

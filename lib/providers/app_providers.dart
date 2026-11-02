@@ -6,10 +6,12 @@ import '../models/favorite.dart';
 import '../models/history_entry.dart';
 import '../models/payment_draft.dart';
 import '../models/wallet.dart';
+import '../services/decision_alert_scheduler.dart';
 import '../services/notification_service.dart';
 import '../services/sms_confirmation_controller.dart';
 import '../services/sms_notification_source.dart';
 import '../services/storage_service.dart';
+import '../services/wallet_logo_loader.dart';
 import '../services/wallet_repository.dart';
 
 /// Overridden in `main` once storage is open, so the rest of the app can read
@@ -55,6 +57,19 @@ final smsConfirmationControllerProvider = Provider<SmsConfirmationController>((
   );
   ref.onDispose(controller.dispose);
   return controller;
+});
+
+/// Wallet logos sized for notifications, cached for the app's lifetime.
+final walletLogoLoaderProvider = Provider<WalletLogoLoader>(
+  (ref) => WalletLogoLoader(),
+);
+
+/// App-wide: the banner is due seconds after the user has left the app, long
+/// after the confirm screen stopped being the thing on screen.
+final decisionAlertSchedulerProvider = Provider<DecisionAlertScheduler>((ref) {
+  final scheduler = DecisionAlertScheduler();
+  ref.onDispose(scheduler.cancel);
+  return scheduler;
 });
 
 // --- Settings --------------------------------------------------------------

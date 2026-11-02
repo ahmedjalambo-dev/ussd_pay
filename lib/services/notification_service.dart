@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -15,6 +16,11 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 ///
 /// Nothing here is I/O beyond the platform channel. No network calls; no
 /// state persisted outside the notification the OS itself is drawing.
+///
+/// Every notification uses `ic_stat_ussd_pay` as its small icon, never the
+/// launcher icon: Android draws small icons from the alpha channel only, and
+/// the opaque launcher icon came out as a blank circle. See
+/// tool/generate_icons.py.
 class NotificationService {
   NotificationService._(this._plugin);
 
@@ -33,6 +39,17 @@ class NotificationService {
       'Ongoing prompt after opening the dialer, asking whether the payment '
       'went through.';
 
+  /// Same prompts, posted silently: listed in the pulldown, but no banner,
+  /// sound or vibration. Used the moment the dialer opens, so nothing pops up
+  /// over the carrier's USSD screen while the user is reading it and typing
+  /// the PIN. A separate channel because Android fixes a channel's importance
+  /// when it is created; the loud re-post goes to [_channelId].
+  static const String _quietChannelId = 'payment_decision_quiet';
+  static const String _quietChannelName = 'Payment decisions (quiet)';
+  static const String _quietChannelDescription =
+      'The same prompt while the carrier screen is still open: listed, '
+      'without a pop-up.';
+
   /// Action ids match the ones we register on the Android notification.
   /// Kept as constants so [_toEvent] and the notification builder agree.
   static const String _actionDone = 'payment_done';
@@ -43,7 +60,11 @@ class NotificationService {
   static Future<NotificationService> init() async {
     final plugin = FlutterLocalNotificationsPlugin();
 
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    // The default small icon for every notification, including the plugin's
+    // foreground-service one. Kept from resource shrinking by res/raw/keep.xml.
+    const androidInit = AndroidInitializationSettings(
+      '@drawable/ic_stat_ussd_pay',
+    );
     const initSettings = InitializationSettings(android: androidInit);
 
     final service = NotificationService._(plugin);
@@ -89,6 +110,11 @@ class NotificationService {
   /// notification instead (see [showWaitingForSms]): the Done/Cancel fallback
   /// at 3 minutes must not let the process freeze, or an SMS in minutes 3-5
   /// would again only be seen when the user comes back.
+  ///
+  /// With [quiet], it goes to the pulldown without a banner. Re-posting it
+  /// later without [quiet] updates the same notification, and an update
+  /// alerts again -- that is how the delayed banner is raised (see
+  /// DecisionAlertScheduler).
   Future<void> showPaymentDecision({
     required String historyEntryId,
     required String title,
@@ -96,13 +122,17 @@ class NotificationService {
     required String doneLabel,
     required String cancelLabel,
     bool keepAwake = false,
+    bool quiet = false,
+    PromptStyle? style,
   }) async {
     final androidDetails = AndroidNotificationDetails(
-      _channelId,
-      _channelName,
-      channelDescription: _channelDescription,
-      importance: Importance.high,
-      priority: Priority.high,
+      quiet ? _quietChannelId : _channelId,
+      quiet ? _quietChannelName : _channelName,
+      channelDescription: quiet
+          ? _quietChannelDescription
+          : _channelDescription,
+      importance: quiet ? Importance.low : Importance.high,
+      priority: quiet ? Priority.low : Priority.high,
       // Ongoing + autoCancel:false makes the notification non-dismissible on
       // Android <=13. On 14+ users can force-dismiss it -- that counts as
       // "Cancelled", which needs no code: history rows start as cancelled
@@ -110,6 +140,8 @@ class NotificationService {
       ongoing: true,
       autoCancel: false,
       category: AndroidNotificationCategory.status,
+      color: style?.accent,
+      largeIcon: style?._largeIcon,
       // No sound or vibration: this fires right after the user just tapped
       // a button in-app; buzzing them would be noise.
       playSound: false,
@@ -166,23 +198,29 @@ class NotificationService {
   ///
   /// Must be called while the app is still in the foreground (before the
   /// dialer hand-off): Android 12+ refuses to start one from the background.
+  ///
+  /// Always quiet: it is posted just as the USSD screen opens, and there is
+  /// nothing to answer yet.
   Future<void> showWaitingForSms({
     required String historyEntryId,
     required String title,
     required String body,
+    PromptStyle? style,
   }) => _startWaitService(
     title: title,
     body: body,
     historyEntryId: historyEntryId,
-    details: const AndroidNotificationDetails(
-      _channelId,
-      _channelName,
-      channelDescription: _channelDescription,
-      importance: Importance.high,
-      priority: Priority.high,
+    details: AndroidNotificationDetails(
+      _quietChannelId,
+      _quietChannelName,
+      channelDescription: _quietChannelDescription,
+      importance: Importance.low,
+      priority: Priority.low,
       ongoing: true,
       autoCancel: false,
       category: AndroidNotificationCategory.status,
+      color: style?.accent,
+      largeIcon: style?._largeIcon,
       playSound: false,
       enableVibration: false,
     ),
@@ -220,6 +258,22 @@ class NotificationService {
     );
   }
 
+  /// Whether the payment prompt is still in the pulldown. False once the
+  /// user answered or swiped it away -- then the delayed banner must not
+  /// bring it back.
+  Future<bool> isDecisionShowing() async {
+    final android = _androidPlugin;
+    if (android == null) return false;
+    try {
+      final active = await android.getActiveNotifications();
+      return active.any((n) => n.id == _notificationId);
+    } on Exception {
+      // Unknown is treated as "still there": a banner for a prompt the user
+      // dismissed is a nuisance, a missing one can cost them the answer.
+      return true;
+    }
+  }
+
   AndroidFlutterLocalNotificationsPlugin? get _androidPlugin => _plugin
       .resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin
@@ -230,11 +284,12 @@ class NotificationService {
   Future<void> showConfirmedBySms({
     required String title,
     required String body,
+    PromptStyle? style,
   }) => _plugin.show(
     id: _notificationId,
     title: title,
     body: body,
-    notificationDetails: const NotificationDetails(
+    notificationDetails: NotificationDetails(
       android: AndroidNotificationDetails(
         _channelId,
         _channelName,
@@ -242,6 +297,8 @@ class NotificationService {
         importance: Importance.high,
         priority: Priority.high,
         category: AndroidNotificationCategory.status,
+        color: style?.accent,
+        largeIcon: style?._largeIcon,
         playSound: false,
         enableVibration: false,
         timeoutAfter: 15000,
@@ -285,6 +342,26 @@ class NotificationService {
 
   @visibleForTesting
   void debugEmit(PaymentDecisionEvent event) => _events.add(event);
+}
+
+/// How a payment's notifications are dressed: the wallet's brand colour on the
+/// small icon and action buttons, and its logo as the large icon, so the user
+/// can tell at a glance which wallet the prompt is about.
+///
+/// Both are optional: a wallet without a logo gets the plain app icon.
+@immutable
+class PromptStyle {
+  const PromptStyle({this.accent, this.largeIcon});
+
+  final Color? accent;
+
+  /// PNG bytes, already downscaled (see WalletLogoLoader).
+  final Uint8List? largeIcon;
+
+  ByteArrayAndroidBitmap? get _largeIcon {
+    final bytes = largeIcon;
+    return bytes == null ? null : ByteArrayAndroidBitmap(bytes);
+  }
 }
 
 /// Which button the user tapped on the payment-decision notification.

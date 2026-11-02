@@ -20,6 +20,9 @@ import '../services/notification_service.dart';
 /// answer as the status of the history row the notification was attached
 /// to, reset the draft, and pop to the root.
 ///
+/// Also feeds the app's lifecycle to DecisionAlertScheduler, so the delayed
+/// Done/Cancel banner counts only time the user actually spends away.
+///
 /// Also applies SMS confirmations from SmsConfirmationController the same
 /// way, as Done -- and stops that controller when the user answers by hand,
 /// so a manual answer is never overwritten by a later SMS.
@@ -34,7 +37,8 @@ class PaymentDecisionListener extends ConsumerStatefulWidget {
 }
 
 class _PaymentDecisionListenerState
-    extends ConsumerState<PaymentDecisionListener> {
+    extends ConsumerState<PaymentDecisionListener>
+    with WidgetsBindingObserver {
   StreamSubscription<PaymentDecisionEvent>? _subscription;
   StreamSubscription<String>? _smsSubscription;
 
@@ -43,6 +47,7 @@ class _PaymentDecisionListenerState
     super.initState();
     final service = ref.read(notificationServiceProvider);
 
+    WidgetsBinding.instance.addObserver(this);
     _subscription = service.events.listen(_apply);
     _smsSubscription = ref
         .read(smsConfirmationControllerProvider)
@@ -63,15 +68,34 @@ class _PaymentDecisionListenerState
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _subscription?.cancel();
     _smsSubscription?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final scheduler = ref.read(decisionAlertSchedulerProvider);
+    switch (state) {
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.paused:
+        scheduler.appBackgrounded();
+      case AppLifecycleState.resumed:
+        scheduler.appResumed();
+      // Inactive is also what pulling the shade down inside the app looks
+      // like -- that is not leaving.
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+        break;
+    }
   }
 
   void _apply(PaymentDecisionEvent event) {
     if (!mounted) return;
 
     ref.read(smsConfirmationControllerProvider).clear();
+    ref.read(decisionAlertSchedulerProvider).cancel(event.historyEntryId);
 
     // Cancel is written explicitly even though new rows already start as
     // cancelled: the row must end up matching what the user tapped, whatever
@@ -82,7 +106,11 @@ class _PaymentDecisionListenerState
     };
     ref
         .read(historyProvider.notifier)
-        .setStatus(event.historyEntryId, status);
+        .setStatus(
+          event.historyEntryId,
+          status,
+          confirmedBy: ConfirmationSource.user,
+        );
 
     ref.read(paymentDraftProvider.notifier).reset();
     // The confirm screen may still be on the stack (user was in the dialer
@@ -96,6 +124,7 @@ class _PaymentDecisionListenerState
   /// tapping Done, recorded as SMS-confirmed.
   void _applySmsConfirmation(String historyEntryId) {
     if (!mounted) return;
+    ref.read(decisionAlertSchedulerProvider).cancel(historyEntryId);
     ref
         .read(historyProvider.notifier)
         .setStatus(

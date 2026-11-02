@@ -773,6 +773,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open'**
   String get batteryOpen;
+
+  /// No description provided for @prevAttemptSameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You already started this payment'**
+  String get prevAttemptSameTitle;
+
+  /// No description provided for @prevAttemptSameBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You opened the dialer for it at {time}. If it went through, dialing again will pay twice.'**
+  String prevAttemptSameBody(String time);
+
+  /// No description provided for @prevAttemptOtherTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Did your previous payment go through?'**
+  String get prevAttemptOtherTitle;
+
+  /// No description provided for @prevAttemptOtherBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Started at {time}. Answer before the new payment replaces its question.'**
+  String prevAttemptOtherBody(String time);
+
+  /// No description provided for @prevAttemptWentThrough.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, it went through'**
+  String get prevAttemptWentThrough;
+
+  /// No description provided for @prevAttemptTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'No, try again'**
+  String get prevAttemptTryAgain;
+
+  /// No description provided for @prevAttemptNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No, it failed'**
+  String get prevAttemptNo;
+
+  /// No description provided for @cancelPaymentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel this payment?'**
+  String get cancelPaymentTitle;
+
+  /// No description provided for @cancelPaymentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It will be recorded as cancelled (not sent). Only do this if the payment failed or you stopped it.'**
+  String get cancelPaymentBody;
+
+  /// No description provided for @cancelPaymentStay.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it'**
+  String get cancelPaymentStay;
+
+  /// No description provided for @cancelPaymentConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, cancel'**
+  String get cancelPaymentConfirm;
 }
 
 class _AppLocalizationsDelegate

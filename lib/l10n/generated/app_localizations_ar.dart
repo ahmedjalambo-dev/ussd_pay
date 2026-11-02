@@ -396,4 +396,42 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get batteryOpen => 'فتح';
+
+  @override
+  String get prevAttemptSameTitle => 'لقد بدأت هذه الدفعة مسبقاً';
+
+  @override
+  String prevAttemptSameBody(String time) {
+    return 'فتحت شاشة الاتصال لها عند $time. إذا تمّت، فإن الاتصال مرة أخرى سيدفع المبلغ مرتين.';
+  }
+
+  @override
+  String get prevAttemptOtherTitle => 'هل تمّت دفعتك السابقة؟';
+
+  @override
+  String prevAttemptOtherBody(String time) {
+    return 'بدأت عند $time. أجب قبل أن تحلّ الدفعة الجديدة محل سؤالها.';
+  }
+
+  @override
+  String get prevAttemptWentThrough => 'نعم، تمّت';
+
+  @override
+  String get prevAttemptTryAgain => 'لا، حاول مجدداً';
+
+  @override
+  String get prevAttemptNo => 'لا، لم تتم';
+
+  @override
+  String get cancelPaymentTitle => 'إلغاء هذه الدفعة؟';
+
+  @override
+  String get cancelPaymentBody =>
+      'سيتم تسجيلها كدفعة ملغاة (لم تُرسل). افعل ذلك فقط إذا فشلت الدفعة أو أوقفتها.';
+
+  @override
+  String get cancelPaymentStay => 'إبقاء';
+
+  @override
+  String get cancelPaymentConfirm => 'نعم، ألغِ';
 }

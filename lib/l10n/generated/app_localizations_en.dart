@@ -396,4 +396,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get batteryOpen => 'Open';
+
+  @override
+  String get prevAttemptSameTitle => 'You already started this payment';
+
+  @override
+  String prevAttemptSameBody(String time) {
+    return 'You opened the dialer for it at $time. If it went through, dialing again will pay twice.';
+  }
+
+  @override
+  String get prevAttemptOtherTitle => 'Did your previous payment go through?';
+
+  @override
+  String prevAttemptOtherBody(String time) {
+    return 'Started at $time. Answer before the new payment replaces its question.';
+  }
+
+  @override
+  String get prevAttemptWentThrough => 'Yes, it went through';
+
+  @override
+  String get prevAttemptTryAgain => 'No, try again';
+
+  @override
+  String get prevAttemptNo => 'No, it failed';
+
+  @override
+  String get cancelPaymentTitle => 'Cancel this payment?';
+
+  @override
+  String get cancelPaymentBody =>
+      'It will be recorded as cancelled (not sent). Only do this if the payment failed or you stopped it.';
+
+  @override
+  String get cancelPaymentStay => 'Keep it';
+
+  @override
+  String get cancelPaymentConfirm => 'Yes, cancel';
 }

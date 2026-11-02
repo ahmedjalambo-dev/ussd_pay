@@ -170,5 +170,36 @@
   "cancelPaymentTitle": "إلغاء هذه الدفعة؟",
   "cancelPaymentBody": "سيتم تسجيلها كدفعة ملغاة (لم تُرسل). افعل ذلك فقط إذا فشلت الدفعة أو أوقفتها.",
   "cancelPaymentStay": "إبقاء",
-  "cancelPaymentConfirm": "نعم، ألغِ"
+  "cancelPaymentConfirm": "نعم، ألغِ",
+
+  "tourStepCounter": "الخطوة {current} من {total}",
+  "@tourStepCounter": {
+    "placeholders": { "current": { "type": "int" }, "total": { "type": "int" } }
+  },
+  "tourNext": "التالي",
+  "tourBack": "السابق",
+  "tourSkip": "تخطّي الجولة",
+  "tourFinish": "إنهاء",
+  "tourTapToContinue": "اضغط على العنصر المميّز للمتابعة",
+  "tourWalletTitle": "ابدأ باختيار محفظة",
+  "tourWalletBody": "كل بطاقة هي محفظة إلكترونية. اضغط على هذه لترى كيف تُعبّأ الدفعة. لن يُرسل شيء أثناء الجولة.",
+  "tourPhoneTitle": "لمن ستدفع",
+  "tourPhoneBody": "اكتب الرقم بأي صيغة، أو اختره من جهات الاتصال أو المفضلة. يظهر تحته الرقم الذي سيُستخدم.",
+  "tourAmountTitle": "كم المبلغ",
+  "tourAmountBody": "اكتب المبلغ، أو اضغط على أحد المبالغ السريعة أسفل الحقل.",
+  "tourReviewTitle": "راجِع قبل أي إرسال",
+  "tourReviewBody": "تعرض لك المراجعة كود USSD كما هو. لا يُطلب أي شيء حتى تتحقق منه وتفتح شاشة الاتصال بنفسك.",
+  "tourBackTitle": "عودة إلى المحافظ",
+  "tourBackBody": "اضغط رجوع لمغادرة هذا النموذج. لا تُرسل الدفعة من هنا أبداً.",
+  "tourPinTitle": "رقمك السري لك وحدك",
+  "tourPinBody": "تُدخل الرقم السري لمحفظتك في شاشة شركة الاتصالات نفسها. USSD Pay لا يطلبه أبداً، فأي شيء يطلبه ليس نحن.",
+  "tourFavoritesTitle": "المفضلة",
+  "tourFavoritesBody": "احفظ من تدفع لهم كثيراً، ثم ادفع لهم والرقم معبّأ مسبقاً. اضغط على المفضلة.",
+  "tourHistoryTitle": "السجل",
+  "tourHistoryBody": "كل دفعة تُسلّمها لشاشة الاتصال تُسجّل هنا كمُنجزة أو ملغاة، وجاهزة للتكرار. اضغط على السجل.",
+  "tourSettingsTitle": "الإعدادات",
+  "tourSettingsBody": "اللغة والمظهر والتأكيد عبر الرسائل هنا. يمكنك إعادة هذه الجولة من الإعدادات في أي وقت.",
+  "help": "المساعدة",
+  "appTour": "جولة في التطبيق",
+  "appTourSubtitle": "أعد الجولة الإرشادية في التطبيق"
 }

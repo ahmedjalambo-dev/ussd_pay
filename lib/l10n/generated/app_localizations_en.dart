@@ -434,4 +434,96 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancelPaymentConfirm => 'Yes, cancel';
+
+  @override
+  String tourStepCounter(int current, int total) {
+    return 'Step $current of $total';
+  }
+
+  @override
+  String get tourNext => 'Next';
+
+  @override
+  String get tourBack => 'Back';
+
+  @override
+  String get tourSkip => 'Skip tour';
+
+  @override
+  String get tourFinish => 'Finish';
+
+  @override
+  String get tourTapToContinue => 'Tap the highlighted item to continue';
+
+  @override
+  String get tourWalletTitle => 'Start with a wallet';
+
+  @override
+  String get tourWalletBody =>
+      'Each card is a mobile wallet. Tap this one to see how a payment is filled in. Nothing is sent during the tour.';
+
+  @override
+  String get tourPhoneTitle => 'Who you are paying';
+
+  @override
+  String get tourPhoneBody =>
+      'Type the number in any form, or pick it from your contacts or favorites. The number that will be used appears underneath.';
+
+  @override
+  String get tourAmountTitle => 'How much';
+
+  @override
+  String get tourAmountBody =>
+      'Type the amount, or tap a quick amount below the field.';
+
+  @override
+  String get tourReviewTitle => 'Review before anything is sent';
+
+  @override
+  String get tourReviewBody =>
+      'Review shows you the exact USSD code. Nothing is dialed until you check it and open the dialer yourself.';
+
+  @override
+  String get tourBackTitle => 'Back to your wallets';
+
+  @override
+  String get tourBackBody =>
+      'Tap back to leave this form. Your payment is never sent from here.';
+
+  @override
+  String get tourPinTitle => 'Your PIN stays yours';
+
+  @override
+  String get tourPinBody =>
+      'You type your wallet PIN on your carrier\'s own screen. USSD Pay never asks for it, so anything that does is not us.';
+
+  @override
+  String get tourFavoritesTitle => 'Favorites';
+
+  @override
+  String get tourFavoritesBody =>
+      'Save people you pay often, then pay them with the number already filled in. Tap Favorites.';
+
+  @override
+  String get tourHistoryTitle => 'History';
+
+  @override
+  String get tourHistoryBody =>
+      'Every payment you hand to the dialer is listed here as done or cancelled, ready to repeat. Tap History.';
+
+  @override
+  String get tourSettingsTitle => 'Settings';
+
+  @override
+  String get tourSettingsBody =>
+      'Language, theme and SMS confirmation are here. You can replay this tour from Settings any time.';
+
+  @override
+  String get help => 'Help';
+
+  @override
+  String get appTour => 'App tour';
+
+  @override
+  String get appTourSubtitle => 'Replay the guided tour of the app';
 }

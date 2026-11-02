@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../providers/app_providers.dart';
+import '../tour/tour_anchor.dart';
+import '../tour/tour_controller.dart';
+import '../tour/tour_steps.dart';
 import 'favorites_screen.dart';
 import 'history_screen.dart';
 import 'home_screen.dart';
@@ -21,6 +24,20 @@ class _RootScreenState extends ConsumerState<RootScreen> {
   static const int _historyIndex = 2;
 
   int _index = 0;
+
+  /// Settings returns `true` when the user asked to replay the app tour. It
+  /// starts on the Pay tab, where its first step is, with any selection
+  /// ended.
+  Future<void> _openSettings() async {
+    final replayTour = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(builder: (_) => const SettingsScreen()),
+    );
+    if (replayTour != true || !mounted) return;
+    ref.read(favoritesSelectionProvider.notifier).clear();
+    ref.read(historySelectionProvider.notifier).clear();
+    setState(() => _index = 0);
+    ref.read(tourProvider.notifier).start();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -93,13 +110,12 @@ class _RootScreenState extends ConsumerState<RootScreen> {
               )
             : AppBar(
                 title: Text(titles[_index]),
-                leading: IconButton(
-                  icon: const Icon(Icons.settings_outlined, size: 26),
-                  tooltip: l10n.settings,
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const SettingsScreen(),
-                    ),
+                leading: TourAnchor(
+                  target: TourTarget.settingsButton,
+                  child: IconButton(
+                    icon: const Icon(Icons.settings_outlined, size: 26),
+                    tooltip: l10n.settings,
+                    onPressed: _openSettings,
                   ),
                 ),
                 actions: [
@@ -117,7 +133,15 @@ class _RootScreenState extends ConsumerState<RootScreen> {
         // IndexedStack keeps each tab's scroll position without rebuilding.
         body: IndexedStack(
           index: _index,
-          children: const [HomeScreen(), FavoritesScreen(), HistoryScreen()],
+          // The anchors tell the app tour which tab is showing.
+          children: const [
+            TourAnchor(target: TourTarget.homePage, child: HomeScreen()),
+            TourAnchor(
+              target: TourTarget.favoritesPage,
+              child: FavoritesScreen(),
+            ),
+            TourAnchor(target: TourTarget.historyPage, child: HistoryScreen()),
+          ],
         ),
         // Sizing, colours and label behaviour come from the theme's
         // navigationBarTheme so this stays a list of destinations.
@@ -135,15 +159,21 @@ class _RootScreenState extends ConsumerState<RootScreen> {
               selectedIcon: const Icon(Icons.payments_rounded),
               label: l10n.navHome,
             ),
-            NavigationDestination(
-              icon: const Icon(Icons.star_outline_rounded),
-              selectedIcon: const Icon(Icons.star_rounded),
-              label: l10n.navFavorites,
+            TourAnchor(
+              target: TourTarget.favoritesTab,
+              child: NavigationDestination(
+                icon: const Icon(Icons.star_outline_rounded),
+                selectedIcon: const Icon(Icons.star_rounded),
+                label: l10n.navFavorites,
+              ),
             ),
-            NavigationDestination(
-              icon: const Icon(Icons.history_rounded),
-              selectedIcon: const Icon(Icons.history_rounded),
-              label: l10n.navHistory,
+            TourAnchor(
+              target: TourTarget.historyTab,
+              child: NavigationDestination(
+                icon: const Icon(Icons.history_rounded),
+                selectedIcon: const Icon(Icons.history_rounded),
+                label: l10n.navHistory,
+              ),
             ),
           ],
         ),

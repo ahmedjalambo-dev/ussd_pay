@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
+import '../tour/tour_anchor.dart';
+import '../tour/tour_steps.dart';
 import '../widgets/wallet_card.dart';
 import 'payment_screen.dart';
 
@@ -37,28 +39,38 @@ class HomeScreen extends ConsumerWidget {
           const SizedBox(height: AppTheme.gapXs),
           Text(l10n.chooseWalletSubtitle, style: theme.textTheme.bodyMedium),
           const SizedBox(height: AppTheme.gapXl),
-          for (final wallet in list) ...[
-            WalletCard(
-              wallet: wallet,
-              localeCode: localeCode,
-              onTap: () {
-                ref.read(paymentDraftProvider.notifier).start(wallet);
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => PaymentScreen(wallet: wallet),
-                  ),
-                );
-              },
+          for (final (i, wallet) in list.indexed) ...[
+            _maybeAnchor(
+              // The tour points at the first wallet only.
+              i == 0 ? TourTarget.walletCard : null,
+              WalletCard(
+                wallet: wallet,
+                localeCode: localeCode,
+                onTap: () {
+                  ref.read(paymentDraftProvider.notifier).start(wallet);
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => PaymentScreen(wallet: wallet),
+                    ),
+                  );
+                },
+              ),
             ),
             const SizedBox(height: AppTheme.gapLg),
           ],
           const SizedBox(height: AppTheme.gapSm),
-          _PinNotice(text: l10n.pinNotice),
+          TourAnchor(
+            target: TourTarget.pinNotice,
+            child: _PinNotice(text: l10n.pinNotice),
+          ),
         ],
       ),
     );
   }
 }
+
+Widget _maybeAnchor(TourTarget? target, Widget child) =>
+    target == null ? child : TourAnchor(target: target, child: child);
 
 /// Shown on the home screen, not buried in settings: the single most valuable
 /// thing a user of a payment app can know is that it will never ask for a PIN,

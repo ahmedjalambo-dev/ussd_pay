@@ -6,6 +6,7 @@ import 'l10n/generated/app_localizations.dart';
 import 'providers/app_providers.dart';
 import 'screens/root_screen.dart';
 import 'theme/app_theme.dart';
+import 'tour/coach_mark_overlay.dart';
 import 'widgets/payment_decision_listener.dart';
 
 class UssdPayApp extends ConsumerWidget {
@@ -29,6 +30,8 @@ class UssdPayApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+      // Above the Navigator, so the tour can follow the user across routes.
+      builder: (context, child) => TourOverlay(child: child!),
       home: const PaymentDecisionListener(child: RootScreen()),
     );
   }

@@ -30,6 +30,7 @@ class StorageService {
   static const String _localeKey = 'localeCode';
   static const String _themeKey = 'themeMode';
   static const String _confirmationKey = 'confirmationModes';
+  static const String _tourKey = 'tourStatus';
 
   final Box<dynamic> _favorites;
   final Box<dynamic> _history;
@@ -175,6 +176,15 @@ class StorageService {
   }
 
   Future<void> setThemeModeName(String name) => _settings.put(_themeKey, name);
+
+  /// `'completed'` or `'skipped'`; `null` until the app tour ends one way or
+  /// the other.
+  String? tourStatusName() {
+    final value = _settings.get(_tourKey);
+    return value is String && value.isNotEmpty ? value : null;
+  }
+
+  Future<void> setTourStatusName(String name) => _settings.put(_tourKey, name);
 
   /// Wallet id -> how its payments are confirmed. Wallets with nothing saved
   /// are absent and use [ConfirmationModes.defaults].

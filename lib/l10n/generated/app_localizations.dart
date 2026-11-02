@@ -839,6 +839,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Yes, cancel'**
   String get cancelPaymentConfirm;
+
+  /// No description provided for @tourStepCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {current} of {total}'**
+  String tourStepCounter(int current, int total);
+
+  /// No description provided for @tourNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get tourNext;
+
+  /// No description provided for @tourBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get tourBack;
+
+  /// No description provided for @tourSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip tour'**
+  String get tourSkip;
+
+  /// No description provided for @tourFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get tourFinish;
+
+  /// No description provided for @tourTapToContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the highlighted item to continue'**
+  String get tourTapToContinue;
+
+  /// No description provided for @tourWalletTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with a wallet'**
+  String get tourWalletTitle;
+
+  /// No description provided for @tourWalletBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Each card is a mobile wallet. Tap this one to see how a payment is filled in. Nothing is sent during the tour.'**
+  String get tourWalletBody;
+
+  /// No description provided for @tourPhoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who you are paying'**
+  String get tourPhoneTitle;
+
+  /// No description provided for @tourPhoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Type the number in any form, or pick it from your contacts or favorites. The number that will be used appears underneath.'**
+  String get tourPhoneBody;
+
+  /// No description provided for @tourAmountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How much'**
+  String get tourAmountTitle;
+
+  /// No description provided for @tourAmountBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Type the amount, or tap a quick amount below the field.'**
+  String get tourAmountBody;
+
+  /// No description provided for @tourReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review before anything is sent'**
+  String get tourReviewTitle;
+
+  /// No description provided for @tourReviewBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Review shows you the exact USSD code. Nothing is dialed until you check it and open the dialer yourself.'**
+  String get tourReviewBody;
+
+  /// No description provided for @tourBackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to your wallets'**
+  String get tourBackTitle;
+
+  /// No description provided for @tourBackBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap back to leave this form. Your payment is never sent from here.'**
+  String get tourBackBody;
+
+  /// No description provided for @tourPinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your PIN stays yours'**
+  String get tourPinTitle;
+
+  /// No description provided for @tourPinBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You type your wallet PIN on your carrier\'s own screen. USSD Pay never asks for it, so anything that does is not us.'**
+  String get tourPinBody;
+
+  /// No description provided for @tourFavoritesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get tourFavoritesTitle;
+
+  /// No description provided for @tourFavoritesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Save people you pay often, then pay them with the number already filled in. Tap Favorites.'**
+  String get tourFavoritesBody;
+
+  /// No description provided for @tourHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get tourHistoryTitle;
+
+  /// No description provided for @tourHistoryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Every payment you hand to the dialer is listed here as done or cancelled, ready to repeat. Tap History.'**
+  String get tourHistoryBody;
+
+  /// No description provided for @tourSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get tourSettingsTitle;
+
+  /// No description provided for @tourSettingsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Language, theme and SMS confirmation are here. You can replay this tour from Settings any time.'**
+  String get tourSettingsBody;
+
+  /// No description provided for @help.
+  ///
+  /// In en, this message translates to:
+  /// **'Help'**
+  String get help;
+
+  /// No description provided for @appTour.
+  ///
+  /// In en, this message translates to:
+  /// **'App tour'**
+  String get appTour;
+
+  /// No description provided for @appTourSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay the guided tour of the app'**
+  String get appTourSubtitle;
 }
 
 class _AppLocalizationsDelegate

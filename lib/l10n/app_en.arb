@@ -176,5 +176,36 @@
   "cancelPaymentTitle": "Cancel this payment?",
   "cancelPaymentBody": "It will be recorded as cancelled (not sent). Only do this if the payment failed or you stopped it.",
   "cancelPaymentStay": "Keep it",
-  "cancelPaymentConfirm": "Yes, cancel"
+  "cancelPaymentConfirm": "Yes, cancel",
+
+  "tourStepCounter": "Step {current} of {total}",
+  "@tourStepCounter": {
+    "placeholders": { "current": { "type": "int" }, "total": { "type": "int" } }
+  },
+  "tourNext": "Next",
+  "tourBack": "Back",
+  "tourSkip": "Skip tour",
+  "tourFinish": "Finish",
+  "tourTapToContinue": "Tap the highlighted item to continue",
+  "tourWalletTitle": "Start with a wallet",
+  "tourWalletBody": "Each card is a mobile wallet. Tap this one to see how a payment is filled in. Nothing is sent during the tour.",
+  "tourPhoneTitle": "Who you are paying",
+  "tourPhoneBody": "Type the number in any form, or pick it from your contacts or favorites. The number that will be used appears underneath.",
+  "tourAmountTitle": "How much",
+  "tourAmountBody": "Type the amount, or tap a quick amount below the field.",
+  "tourReviewTitle": "Review before anything is sent",
+  "tourReviewBody": "Review shows you the exact USSD code. Nothing is dialed until you check it and open the dialer yourself.",
+  "tourBackTitle": "Back to your wallets",
+  "tourBackBody": "Tap back to leave this form. Your payment is never sent from here.",
+  "tourPinTitle": "Your PIN stays yours",
+  "tourPinBody": "You type your wallet PIN on your carrier's own screen. USSD Pay never asks for it, so anything that does is not us.",
+  "tourFavoritesTitle": "Favorites",
+  "tourFavoritesBody": "Save people you pay often, then pay them with the number already filled in. Tap Favorites.",
+  "tourHistoryTitle": "History",
+  "tourHistoryBody": "Every payment you hand to the dialer is listed here as done or cancelled, ready to repeat. Tap History.",
+  "tourSettingsTitle": "Settings",
+  "tourSettingsBody": "Language, theme and SMS confirmation are here. You can replay this tour from Settings any time.",
+  "help": "Help",
+  "appTour": "App tour",
+  "appTourSubtitle": "Replay the guided tour of the app"
 }

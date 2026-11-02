@@ -434,4 +434,96 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cancelPaymentConfirm => 'نعم، ألغِ';
+
+  @override
+  String tourStepCounter(int current, int total) {
+    return 'الخطوة $current من $total';
+  }
+
+  @override
+  String get tourNext => 'التالي';
+
+  @override
+  String get tourBack => 'السابق';
+
+  @override
+  String get tourSkip => 'تخطّي الجولة';
+
+  @override
+  String get tourFinish => 'إنهاء';
+
+  @override
+  String get tourTapToContinue => 'اضغط على العنصر المميّز للمتابعة';
+
+  @override
+  String get tourWalletTitle => 'ابدأ باختيار محفظة';
+
+  @override
+  String get tourWalletBody =>
+      'كل بطاقة هي محفظة إلكترونية. اضغط على هذه لترى كيف تُعبّأ الدفعة. لن يُرسل شيء أثناء الجولة.';
+
+  @override
+  String get tourPhoneTitle => 'لمن ستدفع';
+
+  @override
+  String get tourPhoneBody =>
+      'اكتب الرقم بأي صيغة، أو اختره من جهات الاتصال أو المفضلة. يظهر تحته الرقم الذي سيُستخدم.';
+
+  @override
+  String get tourAmountTitle => 'كم المبلغ';
+
+  @override
+  String get tourAmountBody =>
+      'اكتب المبلغ، أو اضغط على أحد المبالغ السريعة أسفل الحقل.';
+
+  @override
+  String get tourReviewTitle => 'راجِع قبل أي إرسال';
+
+  @override
+  String get tourReviewBody =>
+      'تعرض لك المراجعة كود USSD كما هو. لا يُطلب أي شيء حتى تتحقق منه وتفتح شاشة الاتصال بنفسك.';
+
+  @override
+  String get tourBackTitle => 'عودة إلى المحافظ';
+
+  @override
+  String get tourBackBody =>
+      'اضغط رجوع لمغادرة هذا النموذج. لا تُرسل الدفعة من هنا أبداً.';
+
+  @override
+  String get tourPinTitle => 'رقمك السري لك وحدك';
+
+  @override
+  String get tourPinBody =>
+      'تُدخل الرقم السري لمحفظتك في شاشة شركة الاتصالات نفسها. USSD Pay لا يطلبه أبداً، فأي شيء يطلبه ليس نحن.';
+
+  @override
+  String get tourFavoritesTitle => 'المفضلة';
+
+  @override
+  String get tourFavoritesBody =>
+      'احفظ من تدفع لهم كثيراً، ثم ادفع لهم والرقم معبّأ مسبقاً. اضغط على المفضلة.';
+
+  @override
+  String get tourHistoryTitle => 'السجل';
+
+  @override
+  String get tourHistoryBody =>
+      'كل دفعة تُسلّمها لشاشة الاتصال تُسجّل هنا كمُنجزة أو ملغاة، وجاهزة للتكرار. اضغط على السجل.';
+
+  @override
+  String get tourSettingsTitle => 'الإعدادات';
+
+  @override
+  String get tourSettingsBody =>
+      'اللغة والمظهر والتأكيد عبر الرسائل هنا. يمكنك إعادة هذه الجولة من الإعدادات في أي وقت.';
+
+  @override
+  String get help => 'المساعدة';
+
+  @override
+  String get appTour => 'جولة في التطبيق';
+
+  @override
+  String get appTourSubtitle => 'أعد الجولة الإرشادية في التطبيق';
 }

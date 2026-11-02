@@ -83,6 +83,24 @@ class SettingsScreen extends ConsumerWidget {
             _SectionHeader(title: l10n.data),
             const _SettingsCard(child: _ClearHistoryTile()),
             const SizedBox(height: AppTheme.gapXl),
+            _SectionHeader(title: l10n.help),
+            _SettingsCard(
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.gapLg,
+                ),
+                leading: const Icon(Icons.tour_outlined, size: 24),
+                title: Text(l10n.appTour, style: theme.textTheme.titleSmall),
+                subtitle: Text(
+                  l10n.appTourSubtitle,
+                  style: theme.textTheme.bodySmall,
+                ),
+                // The tour runs on the main tabs, so Settings closes and
+                // the root screen starts it.
+                onTap: () => Navigator.of(context).pop(true),
+              ),
+            ),
+            const SizedBox(height: AppTheme.gapXl),
             _SectionHeader(title: l10n.about),
             _SettingsCard(
               child: Padding(

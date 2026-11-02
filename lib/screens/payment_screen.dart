@@ -10,6 +10,8 @@ import '../services/contact_picker_service.dart';
 import '../services/phone_normalizer.dart';
 import '../services/ussd_service.dart';
 import '../theme/app_theme.dart';
+import '../tour/tour_anchor.dart';
+import '../tour/tour_steps.dart';
 import '../widgets/amount_field.dart';
 import '../widgets/form_section.dart';
 import '../widgets/phone_field.dart';
@@ -248,7 +250,15 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     return Theme(
       data: AppTheme.branded(context, Color(widget.wallet.colorValue)),
       child: Scaffold(
-        appBar: AppBar(title: Text(widget.wallet.nameFor(localeCode))),
+        appBar: AppBar(
+          // Spelled out only so the app tour can point at it; it is the
+          // same back arrow the AppBar would imply.
+          leading: const TourAnchor(
+            target: TourTarget.paymentBack,
+            child: BackButton(),
+          ),
+          title: Text(widget.wallet.nameFor(localeCode)),
+        ),
         body: SafeArea(
           child: ListView(
             padding: const EdgeInsets.fromLTRB(
@@ -270,44 +280,50 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 ),
               ),
               const SizedBox(height: AppTheme.gapXl),
-              FormSection(
-                step: '2',
-                title: l10n.phoneNumberLabel,
-                child: PhoneField(
-                  controller: _phoneController,
-                  normalized: normalized,
-                  recipientName: draft.recipientName,
-                  showIssue: _showPhoneIssue,
-                  autofocus: _autofocusPhone,
-                  textInputAction: TextInputAction.next,
-                  onSubmitted: (_) => _amountFocus.requestFocus(),
-                  onChanged: (value) {
-                    ref
-                        .read(paymentDraftProvider.notifier)
-                        .setPhoneInput(value);
-                    setState(() => _showPhoneIssue = value.isNotEmpty);
-                  },
-                  onPickContact: _pickContact,
-                  onPickFavorite: _pickFavorite,
+              TourAnchor(
+                target: TourTarget.phoneField,
+                child: FormSection(
+                  step: '2',
+                  title: l10n.phoneNumberLabel,
+                  child: PhoneField(
+                    controller: _phoneController,
+                    normalized: normalized,
+                    recipientName: draft.recipientName,
+                    showIssue: _showPhoneIssue,
+                    autofocus: _autofocusPhone,
+                    textInputAction: TextInputAction.next,
+                    onSubmitted: (_) => _amountFocus.requestFocus(),
+                    onChanged: (value) {
+                      ref
+                          .read(paymentDraftProvider.notifier)
+                          .setPhoneInput(value);
+                      setState(() => _showPhoneIssue = value.isNotEmpty);
+                    },
+                    onPickContact: _pickContact,
+                    onPickFavorite: _pickFavorite,
+                  ),
                 ),
               ),
               const SizedBox(height: AppTheme.gapXl),
-              FormSection(
-                step: '3',
-                title: l10n.amountLabel,
-                child: AmountField(
-                  controller: _amountController,
-                  focusNode: _amountFocus,
-                  autofocus: _autofocusAmount,
-                  textInputAction: TextInputAction.next,
-                  onSubmitted: (_) => _noteFocus.requestFocus(),
-                  onChanged: (value) {
-                    final amount = AmountField.parse(value);
-                    ref
-                        .read(paymentDraftProvider.notifier)
-                        .setAmountInput(amount?.toString() ?? '');
-                    setState(() {});
-                  },
+              TourAnchor(
+                target: TourTarget.amountField,
+                child: FormSection(
+                  step: '3',
+                  title: l10n.amountLabel,
+                  child: AmountField(
+                    controller: _amountController,
+                    focusNode: _amountFocus,
+                    autofocus: _autofocusAmount,
+                    textInputAction: TextInputAction.next,
+                    onSubmitted: (_) => _noteFocus.requestFocus(),
+                    onChanged: (value) {
+                      final amount = AmountField.parse(value);
+                      ref
+                          .read(paymentDraftProvider.notifier)
+                          .setAmountInput(amount?.toString() ?? '');
+                      setState(() {});
+                    },
+                  ),
                 ),
               ),
               const SizedBox(height: AppTheme.gapXl),
@@ -334,10 +350,13 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 ),
               ),
               const SizedBox(height: AppTheme.gapXxl),
-              FilledButton.icon(
-                onPressed: _review,
-                icon: const Icon(Icons.arrow_forward_rounded),
-                label: Text(l10n.reviewPayment),
+              TourAnchor(
+                target: TourTarget.reviewButton,
+                child: FilledButton.icon(
+                  onPressed: _review,
+                  icon: const Icon(Icons.arrow_forward_rounded),
+                  label: Text(l10n.reviewPayment),
+                ),
               ),
               const SizedBox(height: AppTheme.gapMd),
               Text(

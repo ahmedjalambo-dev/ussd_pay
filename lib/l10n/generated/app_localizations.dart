@@ -773,6 +773,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open'**
   String get batteryOpen;
+
+  /// No description provided for @prevAttemptSameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You already started this payment'**
+  String get prevAttemptSameTitle;
+
+  /// No description provided for @prevAttemptSameBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You opened the dialer for it at {time}. If it went through, dialing again will pay twice.'**
+  String prevAttemptSameBody(String time);
+
+  /// No description provided for @prevAttemptOtherTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Did your previous payment go through?'**
+  String get prevAttemptOtherTitle;
+
+  /// No description provided for @prevAttemptOtherBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Started at {time}. Answer before the new payment replaces its question.'**
+  String prevAttemptOtherBody(String time);
+
+  /// No description provided for @prevAttemptWentThrough.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, it went through'**
+  String get prevAttemptWentThrough;
+
+  /// No description provided for @prevAttemptTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'No, try again'**
+  String get prevAttemptTryAgain;
+
+  /// No description provided for @prevAttemptNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No, it failed'**
+  String get prevAttemptNo;
 }
 
 class _AppLocalizationsDelegate

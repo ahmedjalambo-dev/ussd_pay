@@ -157,5 +157,19 @@
   "notifConfirmedSmsTitle": "Payment confirmed by SMS",
   "confirmedBySms": "Confirmed by SMS",
   "batteryRestricted": "Allow USSD Pay to run in the background (Battery: No restrictions), so SMS confirmation works while you are in the dialer.",
-  "batteryOpen": "Open"
+  "batteryOpen": "Open",
+
+  "prevAttemptSameTitle": "You already started this payment",
+  "prevAttemptSameBody": "You opened the dialer for it at {time}. If it went through, dialing again will pay twice.",
+  "@prevAttemptSameBody": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "prevAttemptOtherTitle": "Did your previous payment go through?",
+  "prevAttemptOtherBody": "Started at {time}. Answer before the new payment replaces its question.",
+  "@prevAttemptOtherBody": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "prevAttemptWentThrough": "Yes, it went through",
+  "prevAttemptTryAgain": "No, try again",
+  "prevAttemptNo": "No, it failed"
 }

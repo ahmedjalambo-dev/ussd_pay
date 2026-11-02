@@ -151,5 +151,19 @@
   "notifConfirmedSmsTitle": "تم تأكيد الدفعة عبر الرسالة",
   "confirmedBySms": "تم التأكيد عبر الرسالة",
   "batteryRestricted": "اسمح لـ USSD Pay بالعمل في الخلفية (البطارية: بلا قيود)، ليعمل التأكيد عبر الرسائل وأنت في شاشة الاتصال.",
-  "batteryOpen": "فتح"
+  "batteryOpen": "فتح",
+
+  "prevAttemptSameTitle": "لقد بدأت هذه الدفعة مسبقاً",
+  "prevAttemptSameBody": "فتحت شاشة الاتصال لها عند {time}. إذا تمّت، فإن الاتصال مرة أخرى سيدفع المبلغ مرتين.",
+  "@prevAttemptSameBody": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "prevAttemptOtherTitle": "هل تمّت دفعتك السابقة؟",
+  "prevAttemptOtherBody": "بدأت عند {time}. أجب قبل أن تحلّ الدفعة الجديدة محل سؤالها.",
+  "@prevAttemptOtherBody": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "prevAttemptWentThrough": "نعم، تمّت",
+  "prevAttemptTryAgain": "لا، حاول مجدداً",
+  "prevAttemptNo": "لا، لم تتم"
 }

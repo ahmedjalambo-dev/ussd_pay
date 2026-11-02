@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/attempts.dart';
 import '../core/formatting.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../models/favorite.dart';
@@ -83,17 +84,102 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
 
   /// The ongoing Done/Cancel prompt, answered from the pulldown;
   /// PaymentDecisionListener applies the choice.
-  Future<void> _showDecisionNotification(HistoryEntry entry) {
+  ///
+  /// Posted quietly at once -- in the pulldown, but no banner over the USSD
+  /// screen the user is about to read -- and raised as a banner by
+  /// DecisionAlertScheduler once they have been away for a few seconds.
+  Future<void> _showDecisionNotification(HistoryEntry entry) async {
     final l10n = AppLocalizations.of(context);
-    return ref
-        .read(notificationServiceProvider)
-        .showPaymentDecision(
+    final notifications = ref.read(notificationServiceProvider);
+    final scheduler = ref.read(decisionAlertSchedulerProvider);
+    final body = _notificationBody(l10n);
+
+    Future<void> post({required bool quiet}) =>
+        notifications.showPaymentDecision(
           historyEntryId: entry.id,
           title: l10n.notifPaymentDecisionTitle,
-          body: _notificationBody(l10n),
+          body: body,
           doneLabel: l10n.notifActionDone,
           cancelLabel: l10n.notifActionCancel,
+          quiet: quiet,
         );
+
+    await post(quiet: true);
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    scheduler.arm(
+      entryId: entry.id,
+      inBackground:
+          lifecycle == AppLifecycleState.hidden ||
+          lifecycle == AppLifecycleState.paused,
+      alert: () async {
+        // Answered or swiped away in the meantime: do not bring it back.
+        if (await notifications.isDecisionShowing()) {
+          await post(quiet: false);
+        }
+      },
+    );
+  }
+
+  /// Records an in-app answer for [entry] and takes down everything still
+  /// asking about it: the prompt, its pending banner, any SMS wait.
+  Future<void> _settle(HistoryEntry entry, HistoryStatus status) async {
+    await ref.read(notificationServiceProvider).cancelPaymentDecision();
+    ref.read(decisionAlertSchedulerProvider).cancel(entry.id);
+    // A manual answer wins over a later SMS.
+    await ref.read(smsConfirmationControllerProvider).clear();
+    await ref
+        .read(historyProvider.notifier)
+        .setStatus(entry.id, status, confirmedBy: ConfirmationSource.user);
+  }
+
+  /// The double-pay guard, run before every new hand-off. Returns whether to
+  /// go ahead.
+  ///
+  /// There is one prompt at a time, and a new attempt replaces it. So before
+  /// a new attempt, the latest one nobody answered is settled:
+  /// - The same payment (a retry after a USSD error, a second tap): if it
+  ///   went through, dialing again would pay twice -- so "it went through"
+  ///   ends here, and only "it failed" dials again.
+  /// - A different payment (the wrong number was fixed, or a new payment
+  ///   while an old prompt is up): the answer is recorded either way, and
+  ///   the new payment goes ahead.
+  ///
+  /// Dismissing the dialog changes nothing and does not dial.
+  Future<bool> _resolvePreviousAttempt() async {
+    final previous = findUnansweredAttempt(
+      ref.read(historyProvider),
+      DateTime.now().toUtc(),
+    );
+    if (previous == null) return true;
+
+    final same = isSamePayment(
+      previous,
+      walletId: widget.wallet.id,
+      recipientNumber: widget.phone.local,
+      amount: widget.amount,
+    );
+    final wentThrough = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => Theme(
+        data: AppTheme.branded(dialogContext, Color(widget.wallet.colorValue)),
+        child: _PreviousAttemptDialog(entry: previous, samePayment: same),
+      ),
+    );
+    if (wentThrough == null || !mounted) return false;
+
+    await _settle(
+      previous,
+      wentThrough ? HistoryStatus.done : HistoryStatus.cancelled,
+    );
+    if (!mounted) return false;
+
+    if (same && wentThrough) {
+      // This payment is already made: finish it exactly like Done.
+      ref.read(paymentDraftProvider.notifier).reset();
+      Navigator.of(context).popUntil((r) => r.isFirst);
+      return false;
+    }
+    return true;
   }
 
   /// Starts the SMS wait if this wallet is set to "Confirm by SMS", and
@@ -160,6 +246,12 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
     if (_dialing) return;
     setState(() => _dialing = true);
 
+    if (!await _resolvePreviousAttempt()) {
+      if (mounted) setState(() => _dialing = false);
+      return;
+    }
+    if (!mounted) return;
+
     final l10n = AppLocalizations.of(context);
     final controller = ref.read(smsConfirmationControllerProvider);
 
@@ -197,6 +289,7 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
 
   Future<void> _copyCode() async {
     final l10n = AppLocalizations.of(context);
+    if (!await _resolvePreviousAttempt() || !mounted) return;
     await DialerService.copy(widget.ussdCode);
     if (!mounted) return;
 
@@ -306,19 +399,12 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
                   onPressed: _dialing
                       ? null
                       : () {
-                          // Also drop any stale decision notification: the
-                          // user answered in-app, so the pulldown prompt is
-                          // no longer relevant.
-                          ref
-                              .read(notificationServiceProvider)
-                              .cancelPaymentDecision();
-                          // A manual answer wins over a later SMS.
-                          ref.read(smsConfirmationControllerProvider).clear();
+                          // The user answered in-app: _settle also drops the
+                          // pulldown prompt, its pending banner and any SMS
+                          // wait, which are no longer relevant.
                           final entry = _lastEntry;
                           if (entry != null) {
-                            ref
-                                .read(historyProvider.notifier)
-                                .setStatus(entry.id, HistoryStatus.done);
+                            _settle(entry, HistoryStatus.done);
                           }
                           ref.read(paymentDraftProvider.notifier).reset();
                           Navigator.of(context).popUntil((r) => r.isFirst);
@@ -697,6 +783,89 @@ class _PinNoticeInline extends StatelessWidget {
         Icon(Icons.lock_outline_rounded, size: 18, color: scheme.primary),
         const SizedBox(width: AppTheme.gapSm),
         Expanded(child: Text(text, style: theme.textTheme.bodySmall)),
+      ],
+    );
+  }
+}
+
+/// Asks about the latest attempt nobody answered, before a new one replaces
+/// its prompt. Pops `true` (it went through), `false` (it failed) or `null`
+/// (dismissed: dial nothing, change nothing).
+class _PreviousAttemptDialog extends ConsumerWidget {
+  const _PreviousAttemptDialog({
+    required this.entry,
+    required this.samePayment,
+  });
+
+  final HistoryEntry entry;
+
+  /// Same wallet, recipient and amount as the payment about to be dialed --
+  /// the case where "it went through" means "do not pay again".
+  final bool samePayment;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final localeCode = ref.watch(settingsProvider).locale?.languageCode ?? 'ar';
+    final time = formatHistoryTimestamp(entry.dialedAtUtc, localeCode);
+    final name = entry.recipientName;
+
+    return AlertDialog(
+      title: Text(
+        samePayment ? l10n.prevAttemptSameTitle : l10n.prevAttemptOtherTitle,
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // The details are what the user must recognise, so they get their
+          // own lines rather than being spliced into a sentence, where an
+          // Arabic paragraph would reorder the digits.
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: Text(
+              '${formatAmountDisplay(entry.amount)} ${l10n.currencySymbol}',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          if (name != null)
+            Text(
+              name,
+              textDirection: directionOf(name),
+              style: theme.textTheme.titleSmall,
+            ),
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: Text(
+              formatPhoneDisplay(entry.recipientNumber),
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
+          const SizedBox(height: AppTheme.gapMd),
+          Text(
+            samePayment
+                ? l10n.prevAttemptSameBody(time)
+                : l10n.prevAttemptOtherBody(time),
+            style: theme.textTheme.bodyMedium,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          style: TextButton.styleFrom(minimumSize: AppTheme.dialogActionSize),
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(
+            samePayment ? l10n.prevAttemptTryAgain : l10n.prevAttemptNo,
+          ),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(minimumSize: AppTheme.dialogActionSize),
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(l10n.prevAttemptWentThrough),
+        ),
       ],
     );
   }

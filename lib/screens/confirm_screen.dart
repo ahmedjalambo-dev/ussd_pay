@@ -72,25 +72,88 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
     return entry;
   }
 
-  /// Fires the ongoing "did the payment go through?" prompt. The user can
-  /// answer Done/Cancel from the pulldown without switching back to the app;
-  /// PaymentDecisionListener applies the choice.
-  Future<void> _showDecisionNotification(HistoryEntry entry) async {
-    final l10n = AppLocalizations.of(context);
+  String _notificationBody(AppLocalizations l10n) {
     final localeCode = ref.read(settingsProvider).locale?.languageCode ?? 'ar';
-    await ref
+    return l10n.notifPaymentDecisionBody(
+      widget.wallet.nameFor(localeCode),
+      formatAmountDisplay(widget.amount),
+      l10n.currencySymbol,
+    );
+  }
+
+  /// The ongoing Done/Cancel prompt, answered from the pulldown;
+  /// PaymentDecisionListener applies the choice.
+  Future<void> _showDecisionNotification(HistoryEntry entry) {
+    final l10n = AppLocalizations.of(context);
+    return ref
         .read(notificationServiceProvider)
         .showPaymentDecision(
           historyEntryId: entry.id,
           title: l10n.notifPaymentDecisionTitle,
-          body: l10n.notifPaymentDecisionBody(
-            widget.wallet.nameFor(localeCode),
-            formatAmountDisplay(widget.amount),
-            l10n.currencySymbol,
-          ),
+          body: _notificationBody(l10n),
           doneLabel: l10n.notifActionDone,
           cancelLabel: l10n.notifActionCancel,
         );
+  }
+
+  /// Starts the SMS wait if this wallet is set to "Confirm by SMS", and
+  /// returns whether it did. When it did not, the caller shows the Done/Cancel
+  /// prompt instead.
+  ///
+  /// SMS mode silently degrades to "Ask me" when it cannot work (no patterns
+  /// for this wallet, notification access revoked): the user must always be
+  /// left with a way to record the outcome.
+  ///
+  /// Called BEFORE the dialer hand-off: the wait runs as a foreground
+  /// service, which Android 12+ only lets the app start while it is in
+  /// front. Started after the hand-off, it could be refused -- and without it
+  /// the app is frozen in the background and only sees the SMS on return.
+  Future<bool> _startSmsWait(HistoryEntry entry) async {
+    final l10n = AppLocalizations.of(context);
+    final modes = ref.read(settingsProvider).modesFor(widget.wallet.id);
+    final notifications = ref.read(notificationServiceProvider);
+    final controller = ref.read(smsConfirmationControllerProvider);
+    final source = ref.read(smsNotificationSourceProvider);
+    final smsConfig = widget.wallet.smsConfirmation;
+    final body = _notificationBody(l10n);
+
+    final useSms =
+        smsConfig != null &&
+        modes.sms &&
+        source.isSupported &&
+        await source.isAccessGranted();
+
+    if (!useSms) {
+      // A wait left over from an earlier payment must not confirm this one.
+      await controller.clear();
+      return false;
+    }
+
+    await controller.start(
+      entry: entry,
+      config: smsConfig,
+      askManually: modes.manual,
+      showWaiting: () => notifications.showWaitingForSms(
+        historyEntryId: entry.id,
+        title: l10n.notifWaitingSmsTitle,
+        body: body,
+      ),
+      showManualPrompt: ({required whileWaiting}) =>
+          notifications.showPaymentDecision(
+            historyEntryId: entry.id,
+            title: l10n.notifPaymentDecisionTitle,
+            body: body,
+            doneLabel: l10n.notifActionDone,
+            cancelLabel: l10n.notifActionCancel,
+            keepAwake: whileWaiting,
+          ),
+      showConfirmed: () => notifications.showConfirmedBySms(
+        title: l10n.notifConfirmedSmsTitle,
+        body: body,
+      ),
+      stopWaiting: notifications.stopSmsWait,
+    );
+    return true;
   }
 
   Future<void> _dial() async {
@@ -98,17 +161,27 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
     setState(() => _dialing = true);
 
     final l10n = AppLocalizations.of(context);
+    final controller = ref.read(smsConfirmationControllerProvider);
 
     final entry = await _writeHistoryEntry();
+    if (!mounted) return;
+
+    final waitingForSms = await _startSmsWait(entry);
 
     final outcome = await DialerService.dial(widget.ussdCode);
+
+    // Nothing was handed off, so there is nothing to wait for: stop the wait
+    // (and its foreground service) rather than leave a prompt behind.
+    if (outcome != DialOutcome.openedDialer && waitingForSms) {
+      await controller.clear();
+    }
     if (!mounted) return;
 
     // Show the decision prompt only if the dialer actually opened. If it did
     // not, the user is still in-app and the copy-fallback snack (below) is
     // enough -- no reason to bug them with an ongoing notification for a
     // payment they never handed off.
-    if (outcome == DialOutcome.openedDialer) {
+    if (outcome == DialOutcome.openedDialer && !waitingForSms) {
       await _showDecisionNotification(entry);
       if (!mounted) return;
     }
@@ -129,11 +202,15 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
 
     // Copy-code is the "I will paste this into the dialer myself" path -- the
     // user is about to leave the app just as they would with Open dialer, so
-    // it gets the same treatment: write a history row now, show the ongoing
-    // decision prompt, and let the user answer from the pulldown.
+    // it gets the same treatment: write a history row now, start the SMS wait
+    // or show the ongoing decision prompt, and let the user answer from the
+    // pulldown. Still in front here, so the wait's service can start.
     final entry = await _writeHistoryEntry();
     if (!mounted) return;
-    await _showDecisionNotification(entry);
+    if (!await _startSmsWait(entry)) {
+      if (!mounted) return;
+      await _showDecisionNotification(entry);
+    }
     if (!mounted) return;
 
     _snack(l10n.codeCopied);
@@ -235,6 +312,8 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
                           ref
                               .read(notificationServiceProvider)
                               .cancelPaymentDecision();
+                          // A manual answer wins over a later SMS.
+                          ref.read(smsConfirmationControllerProvider).clear();
                           final entry = _lastEntry;
                           if (entry != null) {
                             ref

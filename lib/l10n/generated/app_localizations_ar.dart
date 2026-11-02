@@ -191,10 +191,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get delete => 'حذف';
 
   @override
+  String get edit => 'تعديل';
+
+  @override
   String get recipientTypeSection => 'نوع المستلم';
 
   @override
   String get addFavorite => 'إضافة مفضلة';
+
+  @override
+  String get editFavorite => 'تعديل المفضلة';
+
+  @override
+  String get favoriteUpdated => 'تم تحديث المفضلة';
 
   @override
   String favoriteAlreadyExists(String name) {
@@ -332,4 +341,59 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get retry => 'إعادة المحاولة';
+
+  @override
+  String get confirmationSection => 'تأكيد الدفع';
+
+  @override
+  String get confirmBySms => 'التأكيد عبر الرسائل';
+
+  @override
+  String confirmBySmsSubtitle(String wallet) {
+    return 'اعتبار الدفعة مكتملة عند وصول رسالة $wallet';
+  }
+
+  @override
+  String get confirmManually => 'اسألني (تمّت / إلغاء)';
+
+  @override
+  String get confirmManuallySubtitle => 'السؤال بعد فتح شاشة الاتصال';
+
+  @override
+  String get confirmManuallyFallbackSubtitle =>
+      'السؤال إذا لم تصل رسالة خلال 3 دقائق';
+
+  @override
+  String get smsAccessTitle => 'السماح بالوصول للإشعارات';
+
+  @override
+  String smsAccessBody(String wallet) {
+    return 'لتأكيد الدفعات عبر الرسائل، يحتاج USSD Pay إلى الوصول للإشعارات. يقرأ فقط رسائل $wallet، ولمدة 5 دقائق فقط بعد الدفع، ولا يحفظها ولا يرسلها لأي جهة.\n\nفي الشاشة التالية، فعّل USSD Pay.';
+  }
+
+  @override
+  String get smsAccessOpenSettings => 'فتح الإعدادات';
+
+  @override
+  String get smsAccessMissing =>
+      'الوصول للإشعارات متوقف، لذلك سيتم سؤالك لتأكيد الدفعات.';
+
+  @override
+  String get smsAccessGrant => 'السماح';
+
+  @override
+  String get notifWaitingSmsTitle => 'بانتظار رسالة التأكيد…';
+
+  @override
+  String get notifConfirmedSmsTitle => 'تم تأكيد الدفعة عبر الرسالة';
+
+  @override
+  String get confirmedBySms => 'تم التأكيد عبر الرسالة';
+
+  @override
+  String get batteryRestricted =>
+      'اسمح لـ USSD Pay بالعمل في الخلفية (البطارية: بلا قيود)، ليعمل التأكيد عبر الرسائل وأنت في شاشة الاتصال.';
+
+  @override
+  String get batteryOpen => 'فتح';
 }

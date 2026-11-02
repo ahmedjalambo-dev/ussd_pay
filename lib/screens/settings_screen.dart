@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/generated/app_localizations.dart';
+import '../models/confirmation_modes.dart';
+import '../models/wallet.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
+import '../widgets/wallet_card.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -75,6 +78,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ),
             ),
+            const _ConfirmationSection(),
             const SizedBox(height: AppTheme.gapXl),
             _SectionHeader(title: l10n.data),
             const _SettingsCard(child: _ClearHistoryTile()),
@@ -211,6 +215,298 @@ class _ClearHistoryTile extends ConsumerWidget {
         style: theme.textTheme.bodySmall,
       ),
       onTap: () => _confirmClear(context, ref),
+    );
+  }
+}
+
+/// Per wallet: confirm payments from the wallet's SMS, by asking, or both.
+///
+/// Hidden entirely off Android and for wallets whose `wallets.json` entry
+/// has no `smsConfirmation` patterns -- there is no choice to make there.
+class _ConfirmationSection extends ConsumerStatefulWidget {
+  const _ConfirmationSection();
+
+  @override
+  ConsumerState<_ConfirmationSection> createState() =>
+      _ConfirmationSectionState();
+}
+
+class _ConfirmationSectionState extends ConsumerState<_ConfirmationSection>
+    with WidgetsBindingObserver {
+  /// `null` until the first check returns.
+  bool? _accessGranted;
+
+  /// True when Android still applies battery optimization to the app.
+  bool _batteryRestricted = false;
+
+  /// The wallet whose SMS switch the user tried to turn on before granting
+  /// access. Turned on when they come back from system settings with access
+  /// granted -- and left off if they come back without it.
+  String? _enableOnReturn;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _refreshAccess();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _refreshAccess();
+  }
+
+  Future<void> _refreshAccess() async {
+    final source = ref.read(smsNotificationSourceProvider);
+    final granted = await source.isAccessGranted();
+    final batteryFree = await source.isIgnoringBatteryOptimizations();
+    if (!mounted) return;
+    setState(() {
+      _accessGranted = granted;
+      _batteryRestricted = !batteryFree;
+    });
+
+    final walletId = _enableOnReturn;
+    _enableOnReturn = null;
+    if (granted && walletId != null) _update(walletId, sms: true);
+  }
+
+  void _update(String walletId, {bool? sms, bool? manual}) {
+    final settings = ref.read(settingsProvider);
+    ref
+        .read(settingsProvider.notifier)
+        .setConfirmationModes(
+          walletId,
+          settings.modesFor(walletId).copyWith(sms: sms, manual: manual),
+        );
+  }
+
+  Future<void> _turnOnSms(Wallet wallet, String walletName) async {
+    if (_accessGranted ?? false) {
+      _update(wallet.id, sms: true);
+      return;
+    }
+    final l10n = AppLocalizations.of(context);
+    final open = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.smsAccessTitle),
+        content: Text(l10n.smsAccessBody(walletName)),
+        actions: [
+          TextButton(
+            style: TextButton.styleFrom(minimumSize: AppTheme.dialogActionSize),
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              minimumSize: AppTheme.dialogActionSize,
+            ),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.smsAccessOpenSettings),
+          ),
+        ],
+      ),
+    );
+    if (!(open ?? false) || !mounted) return;
+    _enableOnReturn = wallet.id;
+    await ref.read(smsNotificationSourceProvider).openAccessSettings();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final source = ref.watch(smsNotificationSourceProvider);
+    if (!source.isSupported) return const SizedBox.shrink();
+
+    final wallets = (ref.watch(walletsProvider).value ?? const <Wallet>[])
+        .where((w) => w.smsConfirmation != null)
+        .toList(growable: false);
+    if (wallets.isEmpty) return const SizedBox.shrink();
+
+    final l10n = AppLocalizations.of(context);
+    final settings = ref.watch(settingsProvider);
+    final localeCode = settings.locale?.languageCode ?? 'ar';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: AppTheme.gapXl),
+        _SectionHeader(title: l10n.confirmationSection),
+        for (final (i, wallet) in wallets.indexed) ...[
+          if (i > 0) const SizedBox(height: AppTheme.gapMd),
+          _SettingsCard(
+            child: _WalletConfirmationTiles(
+              wallet: wallet,
+              walletName: wallet.nameFor(localeCode),
+              modes: settings.modesFor(wallet.id),
+              accessMissing: _accessGranted == false,
+              batteryRestricted: _batteryRestricted,
+              onSmsChanged: (on) => on
+                  ? _turnOnSms(wallet, wallet.nameFor(localeCode))
+                  : _update(wallet.id, sms: false),
+              onManualChanged: (on) => _update(wallet.id, manual: on),
+              onGrantAccess: () =>
+                  _turnOnSms(wallet, wallet.nameFor(localeCode)),
+              onOpenBattery: ref
+                  .read(smsNotificationSourceProvider)
+                  .openBatterySettings,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _WalletConfirmationTiles extends StatelessWidget {
+  const _WalletConfirmationTiles({
+    required this.wallet,
+    required this.walletName,
+    required this.modes,
+    required this.accessMissing,
+    required this.batteryRestricted,
+    required this.onSmsChanged,
+    required this.onManualChanged,
+    required this.onGrantAccess,
+    required this.onOpenBattery,
+  });
+
+  final Wallet wallet;
+  final String walletName;
+  final ConfirmationModes modes;
+  final bool accessMissing;
+  final bool batteryRestricted;
+  final ValueChanged<bool> onSmsChanged;
+  final ValueChanged<bool> onManualChanged;
+  final VoidCallback onGrantAccess;
+  final VoidCallback onOpenBattery;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    const tilePadding = EdgeInsets.symmetric(horizontal: AppTheme.gapLg);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.gapLg,
+            AppTheme.gapLg,
+            AppTheme.gapLg,
+            AppTheme.gapSm,
+          ),
+          child: Row(
+            children: [
+              WalletMark(
+                wallet: wallet,
+                onBrand: Color(wallet.colorValue),
+                size: 32,
+              ),
+              const SizedBox(width: AppTheme.gapMd),
+              Expanded(
+                child: Text(walletName, style: theme.textTheme.titleSmall),
+              ),
+            ],
+          ),
+        ),
+        // The switch that is the last one on is disabled rather than allowed
+        // to turn off: with neither, a payment could never leave Cancelled.
+        SwitchListTile(
+          contentPadding: tilePadding,
+          value: modes.sms,
+          onChanged: modes.sms && !modes.manual ? null : onSmsChanged,
+          secondary: const Icon(Icons.mark_chat_read_outlined, size: 24),
+          title: Text(l10n.confirmBySms, style: theme.textTheme.titleSmall),
+          subtitle: Text(
+            l10n.confirmBySmsSubtitle(walletName),
+            style: theme.textTheme.bodySmall,
+          ),
+        ),
+        if (modes.sms && accessMissing)
+          _InlineNotice(
+            text: l10n.smsAccessMissing,
+            actionLabel: l10n.smsAccessGrant,
+            onPressed: onGrantAccess,
+            color: scheme.error,
+          )
+        // Access first: battery only matters once there is something to
+        // deliver.
+        else if (modes.sms && batteryRestricted)
+          _InlineNotice(
+            text: l10n.batteryRestricted,
+            actionLabel: l10n.batteryOpen,
+            onPressed: onOpenBattery,
+            color: scheme.tertiary,
+          ),
+        const Divider(indent: AppTheme.gapLg, endIndent: AppTheme.gapLg),
+        SwitchListTile(
+          contentPadding: tilePadding,
+          value: modes.manual,
+          onChanged: modes.manual && !modes.sms ? null : onManualChanged,
+          secondary: const Icon(Icons.touch_app_outlined, size: 24),
+          title: Text(l10n.confirmManually, style: theme.textTheme.titleSmall),
+          subtitle: Text(
+            modes.sms
+                ? l10n.confirmManuallyFallbackSubtitle
+                : l10n.confirmManuallySubtitle,
+            style: theme.textTheme.bodySmall,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// One-line warning under a switch, with the action that fixes it.
+class _InlineNotice extends StatelessWidget {
+  const _InlineNotice({
+    required this.text,
+    required this.actionLabel,
+    required this.onPressed,
+    required this.color,
+  });
+
+  final String text;
+  final String actionLabel;
+  final VoidCallback onPressed;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.gapLg,
+        0,
+        AppTheme.gapLg,
+        AppTheme.gapSm,
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline_rounded, size: 18, color: color),
+          const SizedBox(width: AppTheme.gapSm),
+          Expanded(
+            child: Text(
+              text,
+              style: theme.textTheme.bodySmall?.copyWith(color: color),
+            ),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(minimumSize: AppTheme.dialogActionSize),
+            onPressed: onPressed,
+            child: Text(actionLabel),
+          ),
+        ],
+      ),
     );
   }
 }

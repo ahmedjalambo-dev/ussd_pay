@@ -46,4 +46,27 @@ void main() {
     expect(done.status, HistoryStatus.done);
     expect(done.toMap()..remove('status'), entry().toMap()..remove('status'));
   });
+
+  group('confirmedBy', () {
+    test('round-trips through toMap / fromMap', () {
+      for (final source in ConfirmationSource.values) {
+        final row = entry().copyWith(
+          status: HistoryStatus.done,
+          confirmedBy: source,
+        );
+        expect(HistoryEntry.fromMap(row.toMap())?.confirmedBy, source);
+      }
+    });
+
+    test('absent on rows nobody has answered, and on old rows', () {
+      expect(entry().confirmedBy, isNull);
+      expect(entry().toMap().containsKey('confirmedBy'), isFalse);
+      expect(HistoryEntry.fromMap(entry().toMap())?.confirmedBy, isNull);
+    });
+
+    test('an unrecognised value is not read as SMS-confirmed', () {
+      final map = entry().toMap()..['confirmedBy'] = 'carrier';
+      expect(HistoryEntry.fromMap(map)?.confirmedBy, isNull);
+    });
+  });
 }

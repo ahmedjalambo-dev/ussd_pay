@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/confirmation_modes.dart';
 import '../models/favorite.dart';
 import '../models/history_entry.dart';
 import '../models/payment_draft.dart';
 import '../models/wallet.dart';
 import '../services/notification_service.dart';
+import '../services/sms_confirmation_controller.dart';
+import '../services/sms_notification_source.dart';
 import '../services/storage_service.dart';
 import '../services/wallet_repository.dart';
 
@@ -37,22 +40,51 @@ final walletsProvider = FutureProvider<List<Wallet>>((ref) async {
   return config.wallets;
 });
 
+/// The native notification-access bridge. Overridden with a fake in tests.
+final smsNotificationSourceProvider = Provider<SmsNotificationSource>(
+  (ref) => PlatformSmsNotificationSource(),
+);
+
+/// App-wide, not per-screen: the wait outlives the confirm screen, since the
+/// user is usually in the dialer when the SMS arrives.
+final smsConfirmationControllerProvider = Provider<SmsConfirmationController>((
+  ref,
+) {
+  final controller = SmsConfirmationController(
+    source: ref.watch(smsNotificationSourceProvider),
+  );
+  ref.onDispose(controller.dispose);
+  return controller;
+});
+
 // --- Settings --------------------------------------------------------------
 
 class AppSettings {
-  const AppSettings({required this.locale, required this.themeMode});
+  const AppSettings({
+    required this.locale,
+    required this.themeMode,
+    this.confirmation = const {},
+  });
 
   /// `null` means "follow the device locale".
   final Locale? locale;
   final ThemeMode themeMode;
 
+  /// Wallet id -> confirmation modes; absent wallets use the defaults.
+  final Map<String, ConfirmationModes> confirmation;
+
+  ConfirmationModes modesFor(String walletId) =>
+      confirmation[walletId] ?? ConfirmationModes.defaults;
+
   AppSettings copyWith({
     Locale? locale,
     ThemeMode? themeMode,
+    Map<String, ConfirmationModes>? confirmation,
     bool clearLocale = false,
   }) => AppSettings(
     locale: clearLocale ? null : (locale ?? this.locale),
     themeMode: themeMode ?? this.themeMode,
+    confirmation: confirmation ?? this.confirmation,
   );
 }
 
@@ -66,7 +98,17 @@ class SettingsNotifier extends Notifier<AppSettings> {
       // deferring to a device locale that is often English on cheap handsets.
       locale: Locale(code ?? 'ar'),
       themeMode: _themeModeFrom(storage.themeModeName()),
+      confirmation: storage.confirmationModes(),
     );
+  }
+
+  Future<void> setConfirmationModes(
+    String walletId,
+    ConfirmationModes modes,
+  ) async {
+    final next = {...state.confirmation, walletId: modes};
+    state = state.copyWith(confirmation: next);
+    await ref.read(storageServiceProvider).setConfirmationModes(next);
   }
 
   Future<void> setLocale(Locale locale) async {
@@ -185,8 +227,14 @@ class HistoryNotifier extends Notifier<List<HistoryEntry>> {
     _refresh();
   }
 
-  Future<void> setStatus(String id, HistoryStatus status) async {
-    await ref.read(storageServiceProvider).setHistoryStatus(id, status);
+  Future<void> setStatus(
+    String id,
+    HistoryStatus status, {
+    ConfirmationSource confirmedBy = ConfirmationSource.user,
+  }) async {
+    await ref
+        .read(storageServiceProvider)
+        .setHistoryStatus(id, status, confirmedBy: confirmedBy);
     _refresh();
   }
 

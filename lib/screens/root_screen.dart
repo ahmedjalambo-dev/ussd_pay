@@ -72,6 +72,15 @@ class _RootScreenState extends ConsumerState<RootScreen> {
                         ? favoritesSelector.selectAll
                         : historySelector.selectAll,
                   ),
+                  // Editing is one row at a time, so Edit shows only while
+                  // exactly one favorite is selected.
+                  if (onFavorites && selectedCount == 1)
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 26),
+                      tooltip: l10n.edit,
+                      onPressed: () =>
+                          FavoritesScreen.editSelected(context, ref),
+                    ),
                   IconButton(
                     icon: const Icon(Icons.delete_outline_rounded, size: 26),
                     tooltip: l10n.delete,

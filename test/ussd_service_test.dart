@@ -44,10 +44,10 @@ void main() {
     test('PalPay to a merchant', () {
       expect(
         UssdService.build(
-          template: '*370*2*1*{phone}*{amount}#',
+          template: '*370*2*{phone}*{amount}#',
           values: {'phone': '0599123456', 'amount': '50'},
         ),
-        '*370*2*1*0599123456*50#',
+        '*370*2*0599123456*50#',
       );
     });
 

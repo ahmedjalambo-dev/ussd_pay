@@ -8,6 +8,10 @@ import '../core/json_map.dart';
 /// session.
 enum HistoryStatus { done, cancelled }
 
+/// Who settled a row's status: the user (notification or in-app button), or
+/// the wallet's own "money sent" SMS.
+enum ConfirmationSource { user, sms }
+
 /// One dialed payment, recorded at the moment the code was handed to the
 /// dialer.
 ///
@@ -33,6 +37,7 @@ class HistoryEntry {
     this.recipientName,
     this.note,
     this.status = HistoryStatus.cancelled,
+    this.confirmedBy,
   }) : id = id ?? newId();
 
   final String id;
@@ -60,7 +65,14 @@ class HistoryEntry {
 
   final HistoryStatus status;
 
-  HistoryEntry copyWith({HistoryStatus? status}) => HistoryEntry(
+  /// `null` until someone answers, and on rows written before this field
+  /// existed.
+  final ConfirmationSource? confirmedBy;
+
+  HistoryEntry copyWith({
+    HistoryStatus? status,
+    ConfirmationSource? confirmedBy,
+  }) => HistoryEntry(
         id: id,
         dialedAtUtc: dialedAtUtc,
         walletId: walletId,
@@ -71,6 +83,7 @@ class HistoryEntry {
         recipientName: recipientName,
         note: note,
         status: status ?? this.status,
+        confirmedBy: confirmedBy ?? this.confirmedBy,
       );
 
   Map<String, dynamic> toMap() => {
@@ -84,6 +97,7 @@ class HistoryEntry {
         if (recipientName != null) 'recipientName': recipientName,
         if (note != null) 'note': note,
         'status': status.name,
+        if (confirmedBy != null) 'confirmedBy': confirmedBy!.name,
       };
 
   static HistoryEntry? fromMap(Object? raw) {
@@ -118,6 +132,11 @@ class HistoryEntry {
         optString(map, 'status'),
         hasKey: map.containsKey('status'),
       ),
+      // Unknown values read as "nobody said": never claim an SMS confirmed
+      // a payment on data we cannot read.
+      confirmedBy: ConfirmationSource.values
+          .where((s) => s.name == optString(map, 'confirmedBy'))
+          .firstOrNull,
     );
   }
 

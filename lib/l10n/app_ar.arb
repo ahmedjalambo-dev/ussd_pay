@@ -73,8 +73,11 @@
   "favoriteNameLabel": "الاسم",
   "save": "حفظ",
   "delete": "حذف",
+  "edit": "تعديل",
   "recipientTypeSection": "نوع المستلم",
   "addFavorite": "إضافة مفضلة",
+  "editFavorite": "تعديل المفضلة",
+  "favoriteUpdated": "تم تحديث المفضلة",
   "favoriteAlreadyExists": "هذا الرقم محفوظ مسبقاً باسم {name}",
   "@favoriteAlreadyExists": {
     "placeholders": { "name": { "type": "String" } }
@@ -125,5 +128,28 @@
 
   "loadFailedTitle": "تعذّرت قراءة إعدادات المحافظ",
   "loadFailedBody": "الملف assets/wallets.json مفقود أو غير صالح، لذا لا يمكن بناء أي دفعة بأمان.",
-  "retry": "إعادة المحاولة"
+  "retry": "إعادة المحاولة",
+
+  "confirmationSection": "تأكيد الدفع",
+  "confirmBySms": "التأكيد عبر الرسائل",
+  "confirmBySmsSubtitle": "اعتبار الدفعة مكتملة عند وصول رسالة {wallet}",
+  "@confirmBySmsSubtitle": {
+    "placeholders": { "wallet": { "type": "String" } }
+  },
+  "confirmManually": "اسألني (تمّت / إلغاء)",
+  "confirmManuallySubtitle": "السؤال بعد فتح شاشة الاتصال",
+  "confirmManuallyFallbackSubtitle": "السؤال إذا لم تصل رسالة خلال 3 دقائق",
+  "smsAccessTitle": "السماح بالوصول للإشعارات",
+  "smsAccessBody": "لتأكيد الدفعات عبر الرسائل، يحتاج USSD Pay إلى الوصول للإشعارات. يقرأ فقط رسائل {wallet}، ولمدة 5 دقائق فقط بعد الدفع، ولا يحفظها ولا يرسلها لأي جهة.\n\nفي الشاشة التالية، فعّل USSD Pay.",
+  "@smsAccessBody": {
+    "placeholders": { "wallet": { "type": "String" } }
+  },
+  "smsAccessOpenSettings": "فتح الإعدادات",
+  "smsAccessMissing": "الوصول للإشعارات متوقف، لذلك سيتم سؤالك لتأكيد الدفعات.",
+  "smsAccessGrant": "السماح",
+  "notifWaitingSmsTitle": "بانتظار رسالة التأكيد…",
+  "notifConfirmedSmsTitle": "تم تأكيد الدفعة عبر الرسالة",
+  "confirmedBySms": "تم التأكيد عبر الرسالة",
+  "batteryRestricted": "اسمح لـ USSD Pay بالعمل في الخلفية (البطارية: بلا قيود)، ليعمل التأكيد عبر الرسائل وأنت في شاشة الاتصال.",
+  "batteryOpen": "فتح"
 }

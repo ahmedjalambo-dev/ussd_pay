@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
+import '../models/confirmation_modes.dart';
 import '../models/favorite.dart';
 import '../models/history_entry.dart';
 
@@ -28,6 +29,7 @@ class StorageService {
 
   static const String _localeKey = 'localeCode';
   static const String _themeKey = 'themeMode';
+  static const String _confirmationKey = 'confirmationModes';
 
   final Box<dynamic> _favorites;
   final Box<dynamic> _history;
@@ -119,12 +121,20 @@ class StorageService {
     await _trimHistory();
   }
 
-  /// Records the user's answer for one row. A row that is gone (deleted, or
-  /// trimmed past the cap) or unreadable is left alone rather than recreated.
-  Future<void> setHistoryStatus(String id, HistoryStatus status) async {
+  /// Records the answer for one row, and who gave it. A row that is gone
+  /// (deleted, or trimmed past the cap) or unreadable is left alone rather
+  /// than recreated.
+  Future<void> setHistoryStatus(
+    String id,
+    HistoryStatus status, {
+    ConfirmationSource confirmedBy = ConfirmationSource.user,
+  }) async {
     final entry = HistoryEntry.fromMap(_history.get(id));
     if (entry == null) return;
-    await _history.put(id, entry.copyWith(status: status).toMap());
+    await _history.put(
+      id,
+      entry.copyWith(status: status, confirmedBy: confirmedBy).toMap(),
+    );
   }
 
   Future<void> deleteHistoryEntry(String id) => _history.delete(id);
@@ -165,4 +175,21 @@ class StorageService {
   }
 
   Future<void> setThemeModeName(String name) => _settings.put(_themeKey, name);
+
+  /// Wallet id -> how its payments are confirmed. Wallets with nothing saved
+  /// are absent and use [ConfirmationModes.defaults].
+  Map<String, ConfirmationModes> confirmationModes() {
+    final raw = _settings.get(_confirmationKey);
+    if (raw is! Map) return const {};
+    return {
+      for (final MapEntry(:key, :value) in raw.entries)
+        if (key is String) key: ConfirmationModes.fromMap(value),
+    };
+  }
+
+  Future<void> setConfirmationModes(Map<String, ConfirmationModes> modes) =>
+      _settings.put(_confirmationKey, {
+        for (final MapEntry(:key, :value) in modes.entries)
+          key: value.toMap(),
+      });
 }

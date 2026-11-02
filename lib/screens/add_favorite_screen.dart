@@ -15,12 +15,17 @@ import '../widgets/phone_field.dart';
 import '../widgets/recipient_type_toggle.dart';
 import '../widgets/wallet_choice_tile.dart';
 
-/// Saves a recipient without first making a payment to them.
+/// Saves a recipient without first making a payment to them, or edits one
+/// already saved when [initial] is given.
 ///
 /// Only what a favorite stores: wallet, recipient type, number, name. No
 /// amount and never a PIN.
 class AddFavoriteScreen extends ConsumerStatefulWidget {
-  const AddFavoriteScreen({super.key});
+  const AddFavoriteScreen({super.key, this.initial});
+
+  /// The favorite being edited, or null to add a new one. Saving an edit
+  /// keeps its id, so the stored row is overwritten in place.
+  final Favorite? initial;
 
   @override
   ConsumerState<AddFavoriteScreen> createState() => _AddFavoriteScreenState();
@@ -38,6 +43,31 @@ class _AddFavoriteScreenState extends ConsumerState<AddFavoriteScreen> {
   /// Errors stay hidden until the user has typed something or tried to save,
   /// so the screen does not open already scolding them.
   bool _showPhoneIssue = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initial;
+    if (initial != null) {
+      _phoneController.text = initial.number;
+      _nameController.text = initial.name;
+      _walletId = initial.walletId;
+      _recipientType = initial.defaultType;
+      // A saved number with an unusual prefix should still show its warning.
+      _showPhoneIssue = true;
+    }
+  }
+
+  /// The favorite with the same number on this wallet, other than the one
+  /// being edited: an unchanged favorite must not count as its own duplicate.
+  Favorite? _duplicateOf(String number, String walletId) {
+    final existing = ref
+        .read(favoritesProvider.notifier)
+        .existing(number: number, walletId: walletId);
+    return existing != null && existing.id != widget.initial?.id
+        ? existing
+        : null;
+  }
 
   @override
   void dispose() {
@@ -103,11 +133,7 @@ class _AddFavoriteScreenState extends ConsumerState<AddFavoriteScreen> {
     if (name.isEmpty) return;
 
     // Also checked live in build; kept here as the guard of record.
-    final notifier = ref.read(favoritesProvider.notifier);
-    final existing = notifier.existing(
-      number: normalized.local,
-      walletId: wallet.id,
-    );
+    final existing = _duplicateOf(normalized.local, wallet.id);
     if (existing != null) {
       _snack(l10n.favoriteAlreadyExists(existing.name));
       return;
@@ -115,20 +141,38 @@ class _AddFavoriteScreenState extends ConsumerState<AddFavoriteScreen> {
 
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
-    await notifier.save(
-      Favorite(
-        name: name,
-        number: normalized.local,
-        walletId: wallet.id,
-        defaultType: _typeFor(wallet),
-      ),
-    );
+    final initial = widget.initial;
+    // copyWith keeps the id, so the edit overwrites the stored row, and
+    // keeps defaultAmount, which this form does not show.
+    final favorite = initial == null
+        ? Favorite(
+            name: name,
+            number: normalized.local,
+            walletId: wallet.id,
+            defaultType: _typeFor(wallet),
+          )
+        : initial.copyWith(
+            name: name,
+            number: normalized.local,
+            walletId: wallet.id,
+            defaultType: _typeFor(wallet),
+          );
+    await ref.read(favoritesProvider.notifier).save(favorite);
     if (!mounted) return;
     navigator.pop();
     messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(l10n.savedAsFavorite)));
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            initial == null ? l10n.savedAsFavorite : l10n.favoriteUpdated,
+          ),
+        ),
+      );
   }
+
+  String _title(AppLocalizations l10n) =>
+      widget.initial == null ? l10n.addFavorite : l10n.editFavorite;
 
   void _snack(String message) {
     ScaffoldMessenger.of(context)
@@ -139,18 +183,19 @@ class _AddFavoriteScreenState extends ConsumerState<AddFavoriteScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final title = _title(l10n);
 
     return ref
         .watch(walletsProvider)
         .when(
           loading: () => Scaffold(
-            appBar: AppBar(title: Text(l10n.addFavorite)),
+            appBar: AppBar(title: Text(title)),
             body: const Center(child: CircularProgressIndicator()),
           ),
           // A broken wallets.json is a build error, but the screen must still
           // say so rather than spin forever.
           error: (error, _) => Scaffold(
-            appBar: AppBar(title: Text(l10n.addFavorite)),
+            appBar: AppBar(title: Text(title)),
             body: Center(
               child: Padding(
                 padding: const EdgeInsets.all(AppTheme.screenPadding),
@@ -176,17 +221,25 @@ class _AddFavoriteScreenState extends ConsumerState<AddFavoriteScreen> {
     // while looking at the number, and switching wallet re-checks at once.
     final duplicate = normalized.local.isEmpty
         ? null
-        : ref
-              .read(favoritesProvider.notifier)
-              .existing(number: normalized.local, walletId: wallet.id);
-    final canSave = name.trim().isNotEmpty && duplicate == null;
+        : _duplicateOf(normalized.local, wallet.id);
+
+    // An edit that changes nothing has nothing to save. The number compares
+    // normalized, so retyping 0599… as +970599… is not a change.
+    final initial = widget.initial;
+    final changed =
+        initial == null ||
+        normalized.local != initial.number ||
+        name.trim() != initial.name ||
+        wallet.id != initial.walletId ||
+        _typeFor(wallet) != initial.defaultType;
+    final canSave = name.trim().isNotEmpty && duplicate == null && changed;
 
     // Branded like the payment screen, and re-branded as the wallet changes,
     // so the colour on screen always matches the wallet being saved to.
     return Theme(
       data: AppTheme.branded(context, Color(wallet.colorValue)),
       child: Scaffold(
-        appBar: AppBar(title: Text(l10n.addFavorite)),
+        appBar: AppBar(title: Text(_title(l10n))),
         // The Save bar is part of the body, not a bottomNavigationBar: the
         // body shrinks above the keyboard, so Save stays reachable while
         // typing instead of hiding under it.
@@ -201,7 +254,31 @@ class _AddFavoriteScreenState extends ConsumerState<AddFavoriteScreen> {
                   AppTheme.gapXl,
                 ),
                 children: [
-                  // Who first: one Contacts tap fills this whole card.
+                  FormSection(
+                    title: l10n.walletLabel,
+                    child: ChoiceTileRows(
+                      children: [
+                        for (final w in wallets)
+                          WalletChoiceTile(
+                            wallet: w,
+                            localeCode: localeCode,
+                            selected: w.id == wallet.id,
+                            onTap: () => setState(() => _walletId = w.id),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.gapXl),
+                  FormSection(
+                    title: l10n.recipientTypeSection,
+                    child: RecipientTypeToggle(
+                      types: wallet.recipientTypes,
+                      selected: _typeFor(wallet),
+                      onChanged: (type) =>
+                          setState(() => _recipientType = type),
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.gapXl),
                   FormSection(
                     title: l10n.recipientLabel,
                     child: Column(
@@ -211,7 +288,9 @@ class _AddFavoriteScreenState extends ConsumerState<AddFavoriteScreen> {
                           controller: _phoneController,
                           normalized: normalized,
                           showIssue: _showPhoneIssue,
-                          autofocus: true,
+                          // Only when adding: on an edit the keyboard would
+                          // cover the pre-filled form the user came to check.
+                          autofocus: widget.initial == null,
                           textInputAction: TextInputAction.next,
                           onSubmitted: (_) => _nameFocus.requestFocus(),
                           onChanged: (value) => setState(
@@ -242,31 +321,6 @@ class _AddFavoriteScreenState extends ConsumerState<AddFavoriteScreen> {
                           ),
                         ),
                       ],
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.gapXl),
-                  FormSection(
-                    title: l10n.walletLabel,
-                    child: ChoiceTileRows(
-                      children: [
-                        for (final w in wallets)
-                          WalletChoiceTile(
-                            wallet: w,
-                            localeCode: localeCode,
-                            selected: w.id == wallet.id,
-                            onTap: () => setState(() => _walletId = w.id),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.gapXl),
-                  FormSection(
-                    title: l10n.recipientTypeSection,
-                    child: RecipientTypeToggle(
-                      types: wallet.recipientTypes,
-                      selected: _typeFor(wallet),
-                      onChanged: (type) =>
-                          setState(() => _recipientType = type),
                     ),
                   ),
                 ],

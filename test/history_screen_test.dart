@@ -38,8 +38,13 @@ class _FakeHistory extends HistoryNotifier {
       state = _sorted([...state, ...entries]);
 
   @override
-  Future<void> setStatus(String id, HistoryStatus status) async => state = [
-    for (final e in state) e.id == id ? e.copyWith(status: status) : e,
+  Future<void> setStatus(
+    String id,
+    HistoryStatus status, {
+    ConfirmationSource confirmedBy = ConfirmationSource.user,
+  }) async => state = [
+    for (final e in state)
+      e.id == id ? e.copyWith(status: status, confirmedBy: confirmedBy) : e,
   ];
 
   @override

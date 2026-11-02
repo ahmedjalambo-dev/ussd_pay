@@ -12,6 +12,96 @@ class WalletConfigException implements Exception {
   String toString() => 'WalletConfigException: $message';
 }
 
+/// How to recognise this wallet's "money sent" SMS, so a payment can be
+/// confirmed from the carrier's own message instead of the user's say-so.
+///
+/// Data, not code, for the same reason as the templates: carriers reword
+/// their SMS, and fixing a pattern must be a JSON edit.
+class SmsConfirmationConfig {
+  const SmsConfirmationConfig({
+    required this.senders,
+    required this.sentPatterns,
+  });
+
+  /// Notification titles the SMS arrives under, e.g. `Jawwal Pay`. Compared
+  /// with [normalizeSender] on both sides, so case and spacing do not matter.
+  final List<String> senders;
+
+  /// Each has an `amount` and a `party` named group. They describe SENT
+  /// messages only: a receive SMS must never match, or incoming money would
+  /// confirm an outgoing payment.
+  final List<RegExp> sentPatterns;
+
+  bool isSender(String title) {
+    final normalized = normalizeSender(title);
+    return senders.any((s) => normalizeSender(s) == normalized);
+  }
+
+  /// Lowercase with all whitespace removed. The native listener applies the
+  /// same folding before it forwards anything.
+  static String normalizeSender(String raw) =>
+      raw.toLowerCase().replaceAll(RegExp(r'\s+'), '');
+
+  factory SmsConfirmationConfig.fromJson(Object? json, String walletId) {
+    if (json is! Map) {
+      throw WalletConfigException(
+        'Wallet "$walletId" "smsConfirmation" must be an object.',
+      );
+    }
+    final rawSenders = json['senders'];
+    final senders = rawSenders is List
+        ? rawSenders.whereType<String>().where((s) => s.trim().isNotEmpty)
+        : const <String>[];
+    if (senders.isEmpty) {
+      throw WalletConfigException(
+        'Wallet "$walletId" "smsConfirmation.senders" must list at least one '
+        'sender name.',
+      );
+    }
+
+    final rawPatterns = json['sentPatterns'];
+    if (rawPatterns is! List || rawPatterns.isEmpty) {
+      throw WalletConfigException(
+        'Wallet "$walletId" "smsConfirmation.sentPatterns" must be a '
+        'non-empty array.',
+      );
+    }
+    final patterns = <RegExp>[];
+    for (final raw in rawPatterns) {
+      if (raw is! String || raw.isEmpty) {
+        throw WalletConfigException(
+          'Wallet "$walletId" has an empty SMS pattern.',
+        );
+      }
+      final RegExp pattern;
+      try {
+        pattern = RegExp(raw, unicode: true);
+      } on FormatException catch (e) {
+        throw WalletConfigException(
+          'Wallet "$walletId" SMS pattern "$raw" does not compile: '
+          '${e.message}',
+        );
+      }
+      // Without both groups a pattern could "match" while telling us nothing
+      // about the amount -- which is the one thing the match must check.
+      for (final group in const ['amount', 'party']) {
+        if (!raw.contains('(?<$group>')) {
+          throw WalletConfigException(
+            'Wallet "$walletId" SMS pattern "$raw" needs a (?<$group>...) '
+            'group.',
+          );
+        }
+      }
+      patterns.add(pattern);
+    }
+
+    return SmsConfirmationConfig(
+      senders: List.unmodifiable(senders),
+      sentPatterns: List.unmodifiable(patterns),
+    );
+  }
+}
+
 /// A mobile wallet and its USSD templates, loaded from `assets/wallets.json`.
 ///
 /// Nothing in `lib/` names a specific wallet; adding one is a JSON edit.
@@ -22,6 +112,7 @@ class Wallet {
     required this.colorValue,
     required this.templates,
     this.iconAsset,
+    this.smsConfirmation,
   });
 
   /// Stable identifier, used as the foreign key in favorites and history.
@@ -41,6 +132,10 @@ class Wallet {
   ///
   /// Insertion-ordered, so the UI toggle renders types in JSON order.
   final Map<String, String> templates;
+
+  /// `null` when the wallet ships no SMS patterns; the "Confirm by SMS"
+  /// setting is then hidden and payments are confirmed by hand.
+  final SmsConfirmationConfig? smsConfirmation;
 
   /// Recipient types this wallet supports, in the order declared in the JSON.
   List<String> get recipientTypes => templates.keys.toList(growable: false);
@@ -91,12 +186,17 @@ class Wallet {
     final rawIcon = json['icon'];
     final iconAsset = rawIcon is String && rawIcon.isNotEmpty ? rawIcon : null;
 
+    final rawSms = json['smsConfirmation'];
+
     return Wallet(
       id: id,
       names: Map.unmodifiable(names),
       colorValue: _parseColorHex(json['colorHex'], id),
       iconAsset: iconAsset,
       templates: Map.unmodifiable(templates),
+      smsConfirmation: rawSms == null
+          ? null
+          : SmsConfirmationConfig.fromJson(rawSms, id),
     );
   }
 
@@ -132,6 +232,8 @@ class WalletConfig {
     if (rawWallets is! List || rawWallets.isEmpty) {
       throw const WalletConfigException('"wallets" must be a non-empty array.');
     }
+
+    
 
     final wallets = <Wallet>[];
     final seenIds = <String>{};

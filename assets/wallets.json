@@ -13,6 +13,13 @@
       "templates": {
         "friend": "*268*1*{phone}*{amount}#",
         "merchant": "*268*2*{phone}*{amount}#"
+      },
+      "smsConfirmation": {
+        "_comment": "Matched against the SMS notification after Arabic-Indic digits are folded to ASCII and whitespace is collapsed. Both named groups are required. Only SENT messages may match: a receive SMS (\"استلمت مبلغ ...\") must never confirm a payment.",
+        "senders": ["Jawwal Pay", "JawwalPay"],
+        "sentPatterns": [
+          "تم تحويل ILS (?<amount>[0-9.,]+) [اإ]لى (?<party>.+?) رصيدك"
+        ]
       }
     },
     {
@@ -25,7 +32,14 @@
       "icon": "assets/images/PalPay.png",
       "templates": {
         "friend": "*370*1*1*{phone}*{amount}#",
-        "merchant": "*370*2*1*{phone}*{amount}#"
+        "merchant": "*370*2*{phone}*{amount}#"
+      },
+      "smsConfirmation": {
+        "_comment": "\"لصديق ل \" is a send; \"لصديق من \" is a receive and must not match.",
+        "senders": ["PALPAY", "PalPay"],
+        "sentPatterns": [
+          "حركة دفع لصديق ل (?<party>.+?) بمبلغ (?<amount>[0-9.,]+) شيكل"
+        ]
       }
     }
   ]

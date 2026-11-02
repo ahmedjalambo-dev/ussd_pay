@@ -21,10 +21,8 @@ class _FakeFavorites extends FavoritesNotifier {
   List<Favorite> build() => _sorted(_initial);
 
   @override
-  Future<void> save(Favorite favorite) async => state = _sorted([
-    ...state.where((f) => f.id != favorite.id),
-    favorite,
-  ]);
+  Future<void> save(Favorite favorite) async =>
+      state = _sorted([...state.where((f) => f.id != favorite.id), favorite]);
 
   @override
   Future<void> deleteMany(Iterable<String> ids) async {
@@ -80,6 +78,11 @@ class _Host extends ConsumerWidget {
                   .read(favoritesSelectionProvider.notifier)
                   .selectAll,
             ),
+            if (selection.length == 1)
+              IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: () => FavoritesScreen.editSelected(context, ref),
+              ),
             IconButton(
               icon: const Icon(Icons.delete_outline_rounded),
               onPressed: () => FavoritesScreen.deleteSelected(context, ref),
@@ -117,9 +120,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    container = ProviderScope.containerOf(
-      tester.element(find.byType(_Host)),
-    );
+    container = ProviderScope.containerOf(tester.element(find.byType(_Host)));
   }
 
   List<String> names() =>
@@ -182,6 +183,31 @@ void main() {
     await tester.tap(find.byIcon(Icons.select_all_rounded));
     await tester.pumpAndSettle();
     expect(find.text('2 selected'), findsOneWidget);
+  });
+
+  testWidgets('Edit shows for one selected row and opens it pre-filled', (
+    tester,
+  ) async {
+    await pump(tester, [_favorite('b', 'Bob'), _favorite('a', 'Alice')]);
+
+    await tester.longPress(find.text('Alice'));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
+
+    // Editing is one row at a time.
+    await tester.tap(find.text('Bob'));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.edit_outlined), findsNothing);
+    await tester.tap(find.text('Bob'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.edit_outlined));
+    await tester.pumpAndSettle();
+    final screen = tester.widget<AddFavoriteScreen>(
+      find.byType(AddFavoriteScreen),
+    );
+    expect(screen.initial?.id, 'a');
+    expect(container.read(favoritesSelectionProvider), isEmpty);
   });
 
   testWidgets('a tap opens a pre-filled payment screen', (tester) async {

@@ -192,10 +192,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get delete => 'Delete';
 
   @override
+  String get edit => 'Edit';
+
+  @override
   String get recipientTypeSection => 'Recipient type';
 
   @override
   String get addFavorite => 'Add favorite';
+
+  @override
+  String get editFavorite => 'Edit favorite';
+
+  @override
+  String get favoriteUpdated => 'Favorite updated';
 
   @override
   String favoriteAlreadyExists(String name) {
@@ -332,4 +341,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get retry => 'Retry';
+
+  @override
+  String get confirmationSection => 'Payment confirmation';
+
+  @override
+  String get confirmBySms => 'Confirm by SMS';
+
+  @override
+  String confirmBySmsSubtitle(String wallet) {
+    return 'Mark the payment done when the $wallet SMS arrives';
+  }
+
+  @override
+  String get confirmManually => 'Ask me (Done / Cancel)';
+
+  @override
+  String get confirmManuallySubtitle => 'Ask after you open the dialer';
+
+  @override
+  String get confirmManuallyFallbackSubtitle =>
+      'Ask if no SMS arrives within 3 minutes';
+
+  @override
+  String get smsAccessTitle => 'Allow notification access';
+
+  @override
+  String smsAccessBody(String wallet) {
+    return 'To confirm payments by SMS, USSD Pay needs notification access. It only looks at messages from $wallet, only for 5 minutes after you pay, and never saves or sends them anywhere.\n\nOn the next screen, turn on USSD Pay.';
+  }
+
+  @override
+  String get smsAccessOpenSettings => 'Open settings';
+
+  @override
+  String get smsAccessMissing =>
+      'Notification access is off, so payments are confirmed by asking you.';
+
+  @override
+  String get smsAccessGrant => 'Allow';
+
+  @override
+  String get notifWaitingSmsTitle => 'Waiting for the confirmation SMS…';
+
+  @override
+  String get notifConfirmedSmsTitle => 'Payment confirmed by SMS';
+
+  @override
+  String get confirmedBySms => 'Confirmed by SMS';
+
+  @override
+  String get batteryRestricted =>
+      'Allow USSD Pay to run in the background (Battery: No restrictions), so SMS confirmation works while you are in the dialer.';
+
+  @override
+  String get batteryOpen => 'Open';
 }

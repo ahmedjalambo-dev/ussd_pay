@@ -117,7 +117,7 @@ void main() {
       'jawwalpay/friend': '*268*1*0599123456*50#',
       'jawwalpay/merchant': '*268*2*0599123456*50#',
       'palpay/friend': '*370*1*1*0599123456*50#',
-      'palpay/merchant': '*370*2*1*0599123456*50#',
+      'palpay/merchant': '*370*2*0599123456*50#',
     };
 
     expected.forEach((key, code) {
@@ -217,5 +217,67 @@ void main() {
       ),
       '*999*3*0599123456*75#',
     );
+  });
+
+  group('smsConfirmation', () {
+    Map<String, dynamic> walletJson(Object? sms) => {
+      'id': 'w',
+      'name': {'en': 'W'},
+      'templates': {'friend': '*1*{phone}*{amount}#'},
+      'smsConfirmation': ?sms,
+    };
+
+    test('the shipped wallets all declare SMS patterns', () {
+      for (final wallet in config.wallets) {
+        expect(wallet.smsConfirmation, isNotNull, reason: wallet.id);
+      }
+    });
+
+    test('is optional', () {
+      expect(Wallet.fromJson(walletJson(null)).smsConfirmation, isNull);
+    });
+
+    test('a wallet with patterns parses them', () {
+      final sms = Wallet.fromJson(
+        walletJson({
+          'senders': ['W Pay'],
+          'sentPatterns': ['sent (?<amount>[0-9.]+) to (?<party>.+)'],
+        }),
+      ).smsConfirmation!;
+      expect(sms.senders, ['W Pay']);
+      expect(sms.sentPatterns, hasLength(1));
+    });
+
+    final invalid = <String, Object?>{
+      'not an object': 'yes',
+      'no senders': {
+        'senders': <String>[],
+        'sentPatterns': ['(?<amount>1)(?<party>2)'],
+      },
+      'no patterns': {
+        'senders': ['W'],
+        'sentPatterns': <String>[],
+      },
+      'pattern does not compile': {
+        'senders': ['W'],
+        'sentPatterns': ['(?<amount>[0-9'],
+      },
+      'pattern missing the amount group': {
+        'senders': ['W'],
+        'sentPatterns': ['sent to (?<party>.+)'],
+      },
+      'pattern missing the party group': {
+        'senders': ['W'],
+        'sentPatterns': ['sent (?<amount>[0-9.]+)'],
+      },
+    };
+    invalid.forEach((name, sms) {
+      test('fails loudly: $name', () {
+        expect(
+          () => Wallet.fromJson(walletJson(sms)),
+          throwsA(isA<WalletConfigException>()),
+        );
+      });
+    });
   });
 }

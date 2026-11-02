@@ -12,6 +12,13 @@
          the confirm screen keeps its AppBar "Done" button as the fallback. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
+    <!-- "Confirm by SMS" keeps a foreground service up for the 5-minute SMS
+         wait. Without it, Android's cached-app freezer (and MIUI's battery
+         saver) freeze the app once the user is in the dialer, and the SMS
+         notification is only delivered when they come back. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
+
     <!-- Not every target device has telephony, and the app is still useful
          (build and copy a code) without it. -->
     <uses-feature android:name="android.hardware.telephony" android:required="false"/>
@@ -42,6 +49,38 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Optional "Confirm by SMS": reads the wallet's own "money sent" SMS
+             from its notification, so a payment can be marked Done without
+             the user tapping anything. Notification access (granted by the
+             user in system settings, off until they turn it on) rather than
+             READ_SMS/RECEIVE_SMS: Google Play only allows SMS permissions for
+             default SMS apps. The service itself drops every notification
+             except the wallet's SMS sender while a payment is waiting; see
+             PaymentSmsListenerService. -->
+        <service
+            android:name=".PaymentSmsListenerService"
+            android:exported="true"
+            android:label="USSD Pay"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService"/>
+            </intent-filter>
+        </service>
+        <!-- flutter_local_notifications' foreground service, started by
+             NotificationService.showWaitingForSms for the SMS wait and stopped
+             as soon as the wait ends (match, manual answer, or 5 minutes).
+             specialUse because no standard type fits: shortService is cut
+             off after ~3 minutes, inside the 5-minute window, and dataSync
+             would be a false declaration. -->
+        <service
+            android:name="com.dexterous.flutterlocalnotifications.ForegroundService"
+            android:exported="false"
+            android:stopWithTask="true"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Waits up to 5 minutes for the user's mobile-wallet SMS to confirm a payment they just made"/>
+        </service>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

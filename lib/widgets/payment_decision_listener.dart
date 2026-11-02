@@ -19,6 +19,10 @@ import '../services/notification_service.dart';
 /// Actions apply directly to the running Riverpod graph: both record the
 /// answer as the status of the history row the notification was attached
 /// to, reset the draft, and pop to the root.
+///
+/// Also applies SMS confirmations from SmsConfirmationController the same
+/// way, as Done -- and stops that controller when the user answers by hand,
+/// so a manual answer is never overwritten by a later SMS.
 class PaymentDecisionListener extends ConsumerStatefulWidget {
   const PaymentDecisionListener({super.key, required this.child});
 
@@ -32,6 +36,7 @@ class PaymentDecisionListener extends ConsumerStatefulWidget {
 class _PaymentDecisionListenerState
     extends ConsumerState<PaymentDecisionListener> {
   StreamSubscription<PaymentDecisionEvent>? _subscription;
+  StreamSubscription<String>? _smsSubscription;
 
   @override
   void initState() {
@@ -39,6 +44,10 @@ class _PaymentDecisionListenerState
     final service = ref.read(notificationServiceProvider);
 
     _subscription = service.events.listen(_apply);
+    _smsSubscription = ref
+        .read(smsConfirmationControllerProvider)
+        .confirmed
+        .listen(_applySmsConfirmation);
 
     // Deferred so ref is safe to use and Navigator is mounted.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -55,11 +64,14 @@ class _PaymentDecisionListenerState
   @override
   void dispose() {
     _subscription?.cancel();
+    _smsSubscription?.cancel();
     super.dispose();
   }
 
   void _apply(PaymentDecisionEvent event) {
     if (!mounted) return;
+
+    ref.read(smsConfirmationControllerProvider).clear();
 
     // Cancel is written explicitly even though new rows already start as
     // cancelled: the row must end up matching what the user tapped, whatever
@@ -77,6 +89,21 @@ class _PaymentDecisionListenerState
     // when they answered). Pop everything back to the root tabs. Using the
     // root navigator so we do not stop at an inner navigator like a
     // bottom-sheet route.
+    Navigator.of(context, rootNavigator: true).popUntil((r) => r.isFirst);
+  }
+
+  /// The wallet's own SMS said the money went: the same outcome as the user
+  /// tapping Done, recorded as SMS-confirmed.
+  void _applySmsConfirmation(String historyEntryId) {
+    if (!mounted) return;
+    ref
+        .read(historyProvider.notifier)
+        .setStatus(
+          historyEntryId,
+          HistoryStatus.done,
+          confirmedBy: ConfirmationSource.sms,
+        );
+    ref.read(paymentDraftProvider.notifier).reset();
     Navigator.of(context, rootNavigator: true).popUntil((r) => r.isFirst);
   }
 

@@ -134,6 +134,25 @@ class PaymentDetailsSheet extends ConsumerWidget {
               ].join(' · '),
               style: theme.textTheme.labelSmall,
             ),
+            if (entry.confirmedBy == ConfirmationSource.sms) ...[
+              const SizedBox(height: AppTheme.gapSm),
+              Row(
+                children: [
+                  Icon(
+                    Icons.mark_chat_read_outlined,
+                    size: 16,
+                    color: scheme.primary,
+                  ),
+                  const SizedBox(width: AppTheme.gapXs),
+                  Text(
+                    l10n.confirmedBySms,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: scheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             if (note != null && note.isNotEmpty) ...[
               const SizedBox(height: AppTheme.gapSm),
               Text(

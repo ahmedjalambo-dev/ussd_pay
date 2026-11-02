@@ -73,8 +73,11 @@
   "favoriteNameLabel": "Name",
   "save": "Save",
   "delete": "Delete",
+  "edit": "Edit",
   "recipientTypeSection": "Recipient type",
   "addFavorite": "Add favorite",
+  "editFavorite": "Edit favorite",
+  "favoriteUpdated": "Favorite updated",
   "favoriteAlreadyExists": "This number is already saved as {name}",
   "@favoriteAlreadyExists": {
     "placeholders": { "name": { "type": "String" } }
@@ -131,5 +134,28 @@
 
   "loadFailedTitle": "Wallet settings could not be read",
   "loadFailedBody": "assets/wallets.json is missing or invalid, so no payment can be built safely.",
-  "retry": "Retry"
+  "retry": "Retry",
+
+  "confirmationSection": "Payment confirmation",
+  "confirmBySms": "Confirm by SMS",
+  "confirmBySmsSubtitle": "Mark the payment done when the {wallet} SMS arrives",
+  "@confirmBySmsSubtitle": {
+    "placeholders": { "wallet": { "type": "String" } }
+  },
+  "confirmManually": "Ask me (Done / Cancel)",
+  "confirmManuallySubtitle": "Ask after you open the dialer",
+  "confirmManuallyFallbackSubtitle": "Ask if no SMS arrives within 3 minutes",
+  "smsAccessTitle": "Allow notification access",
+  "smsAccessBody": "To confirm payments by SMS, USSD Pay needs notification access. It only looks at messages from {wallet}, only for 5 minutes after you pay, and never saves or sends them anywhere.\n\nOn the next screen, turn on USSD Pay.",
+  "@smsAccessBody": {
+    "placeholders": { "wallet": { "type": "String" } }
+  },
+  "smsAccessOpenSettings": "Open settings",
+  "smsAccessMissing": "Notification access is off, so payments are confirmed by asking you.",
+  "smsAccessGrant": "Allow",
+  "notifWaitingSmsTitle": "Waiting for the confirmation SMS…",
+  "notifConfirmedSmsTitle": "Payment confirmed by SMS",
+  "confirmedBySms": "Confirmed by SMS",
+  "batteryRestricted": "Allow USSD Pay to run in the background (Battery: No restrictions), so SMS confirmation works while you are in the dialer.",
+  "batteryOpen": "Open"
 }

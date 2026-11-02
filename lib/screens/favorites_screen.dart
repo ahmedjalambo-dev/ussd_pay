@@ -16,8 +16,29 @@ class FavoritesScreen extends ConsumerWidget {
   const FavoritesScreen({super.key});
 
   /// Public so the root shell's floating button can open it too.
-  static Future<void> openAdd(BuildContext context) => Navigator.of(context)
-      .push(MaterialPageRoute<void>(builder: (_) => const AddFavoriteScreen()));
+  static Future<void> openAdd(BuildContext context) => Navigator.of(
+    context,
+  ).push(MaterialPageRoute<void>(builder: (_) => const AddFavoriteScreen()));
+
+  /// Opens the one selected favorite for editing. Public so the root AppBar,
+  /// which shows Edit only while exactly one row is selected, can call it.
+  /// The selection ends first, so the user comes back to the plain list.
+  static Future<void> editSelected(BuildContext context, WidgetRef ref) async {
+    final ids = ref.read(favoritesSelectionProvider);
+    if (ids.length != 1) return;
+    final favorite = ref
+        .read(favoritesProvider)
+        .where((f) => f.id == ids.single)
+        .firstOrNull;
+    if (favorite == null) return;
+
+    ref.read(favoritesSelectionProvider.notifier).clear();
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => AddFavoriteScreen(initial: favorite),
+      ),
+    );
+  }
 
   /// Deletes every selected favorite at once and offers Undo, rather than
   /// asking first, as history does: selecting and pressing delete is already

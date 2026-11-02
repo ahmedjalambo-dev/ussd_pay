@@ -17,8 +17,10 @@ class _FakeFavorites extends FavoritesNotifier {
   @override
   List<Favorite> build() => _initial;
 
+  /// Overwrites by id, as Hive's `put` does, so an edit replaces its row.
   @override
-  Future<void> save(Favorite favorite) async => state = [favorite, ...state];
+  Future<void> save(Favorite favorite) async =>
+      state = [favorite, ...state.where((f) => f.id != favorite.id)];
 }
 
 class _FakeSettings extends SettingsNotifier {
@@ -51,6 +53,7 @@ void main() {
   Future<void> pump(
     WidgetTester tester, [
     List<Favorite> initial = const [],
+    Favorite? editing,
   ]) async {
     // Tall enough that the lazily built form has every field on screen.
     tester.view.physicalSize = const Size(1080, 3200);
@@ -79,7 +82,7 @@ void main() {
               body: TextButton(
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) => const AddFavoriteScreen(),
+                    builder: (_) => AddFavoriteScreen(initial: editing),
                   ),
                 ),
                 child: const Text('open'),
@@ -230,5 +233,80 @@ void main() {
 
     expect(saved().single.walletId, 'palpay');
     expect(saved().single.defaultType, 'friend');
+  });
+
+  group('editing', () {
+    final mum = Favorite(
+      id: 'mum',
+      name: 'Mum',
+      number: '0599123456',
+      walletId: 'jawwal_pay',
+      defaultType: 'merchant',
+      defaultAmount: 50,
+    );
+    final dad = Favorite(
+      id: 'dad',
+      name: 'Dad',
+      number: '0599000111',
+      walletId: 'jawwal_pay',
+      defaultType: 'friend',
+    );
+
+    bool canSave(WidgetTester tester) =>
+        tester.widget<FilledButton>(saveButton()).onPressed != null;
+
+    testWidgets('opens pre-filled, with Save off until something changes', (
+      tester,
+    ) async {
+      await pump(tester, [mum, dad], mum);
+
+      expect(find.text('Edit favorite'), findsOneWidget);
+      expect(
+        tester.widget<TextField>(phoneField()).controller?.text,
+        '0599123456',
+      );
+      expect(tester.widget<TextField>(nameField()).controller?.text, 'Mum');
+      // Unchanged, it is not its own duplicate, and there is nothing to save.
+      expect(find.textContaining('already saved'), findsNothing);
+      expect(canSave(tester), isFalse);
+
+      // The same number in another form is not a change.
+      await tester.enterText(phoneField(), '+970599123456');
+      await tester.pump();
+      expect(canSave(tester), isFalse);
+
+      await tester.tap(find.text('A friend'));
+      await tester.pump();
+      expect(canSave(tester), isTrue);
+    });
+
+    testWidgets('saving overwrites the row, keeping id and amount', (
+      tester,
+    ) async {
+      await pump(tester, [mum, dad], mum);
+
+      await tester.enterText(nameField(), 'Mother');
+      await tester.enterText(phoneField(), '0569555444');
+      await tester.pump();
+      await tapSave(tester);
+
+      expect(saved(), hasLength(2));
+      final edited = saved().singleWhere((f) => f.id == 'mum');
+      expect(edited.name, 'Mother');
+      expect(edited.number, '0569555444');
+      expect(edited.defaultType, 'merchant');
+      expect(edited.defaultAmount, 50);
+      expect(find.byType(AddFavoriteScreen), findsNothing);
+      expect(find.text('Favorite updated'), findsOneWidget);
+    });
+
+    testWidgets("taking another favorite's number is flagged", (tester) async {
+      await pump(tester, [mum, dad], mum);
+
+      await tester.enterText(phoneField(), '0599000111');
+      await tester.pump();
+      expect(find.text('This number is already saved as Dad'), findsOneWidget);
+      expect(canSave(tester), isFalse);
+    });
   });
 }

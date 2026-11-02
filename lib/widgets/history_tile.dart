@@ -68,11 +68,33 @@ class HistoryTile extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
       ),
-      subtitle: Text(
-        [
-          ?walletName,
-          formatHistoryTimestamp(entry.dialedAtUtc, localeCode),
-        ].join(' · '),
+      subtitle: Text.rich(
+        TextSpan(
+          children: [
+            // Leads the line so it survives the ellipsis on a narrow row.
+            if (entry.confirmedBy == ConfirmationSource.sms)
+              WidgetSpan(
+                alignment: PlaceholderAlignment.middle,
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.only(
+                    end: AppTheme.gapXs,
+                  ),
+                  child: Icon(
+                    Icons.mark_chat_read_outlined,
+                    size: 14,
+                    color: scheme.primary,
+                    semanticLabel: l10n.confirmedBySms,
+                  ),
+                ),
+              ),
+            TextSpan(
+              text: [
+                ?walletName,
+                formatHistoryTimestamp(entry.dialedAtUtc, localeCode),
+              ].join(' · '),
+            ),
+          ],
+        ),
         style: theme.textTheme.labelSmall,
         overflow: TextOverflow.ellipsis,
       ),

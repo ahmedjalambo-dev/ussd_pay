@@ -438,6 +438,12 @@ abstract class AppLocalizations {
   /// **'Delete'**
   String get delete;
 
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
   /// No description provided for @recipientTypeSection.
   ///
   /// In en, this message translates to:
@@ -449,6 +455,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add favorite'**
   String get addFavorite;
+
+  /// No description provided for @editFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit favorite'**
+  String get editFavorite;
+
+  /// No description provided for @favoriteUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite updated'**
+  String get favoriteUpdated;
 
   /// No description provided for @favoriteAlreadyExists.
   ///
@@ -659,6 +677,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Retry'**
   String get retry;
+
+  /// No description provided for @confirmationSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment confirmation'**
+  String get confirmationSection;
+
+  /// No description provided for @confirmBySms.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm by SMS'**
+  String get confirmBySms;
+
+  /// No description provided for @confirmBySmsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark the payment done when the {wallet} SMS arrives'**
+  String confirmBySmsSubtitle(String wallet);
+
+  /// No description provided for @confirmManually.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask me (Done / Cancel)'**
+  String get confirmManually;
+
+  /// No description provided for @confirmManuallySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask after you open the dialer'**
+  String get confirmManuallySubtitle;
+
+  /// No description provided for @confirmManuallyFallbackSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask if no SMS arrives within 3 minutes'**
+  String get confirmManuallyFallbackSubtitle;
+
+  /// No description provided for @smsAccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow notification access'**
+  String get smsAccessTitle;
+
+  /// No description provided for @smsAccessBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To confirm payments by SMS, USSD Pay needs notification access. It only looks at messages from {wallet}, only for 5 minutes after you pay, and never saves or sends them anywhere.\n\nOn the next screen, turn on USSD Pay.'**
+  String smsAccessBody(String wallet);
+
+  /// No description provided for @smsAccessOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get smsAccessOpenSettings;
+
+  /// No description provided for @smsAccessMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification access is off, so payments are confirmed by asking you.'**
+  String get smsAccessMissing;
+
+  /// No description provided for @smsAccessGrant.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get smsAccessGrant;
+
+  /// No description provided for @notifWaitingSmsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the confirmation SMS…'**
+  String get notifWaitingSmsTitle;
+
+  /// No description provided for @notifConfirmedSmsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment confirmed by SMS'**
+  String get notifConfirmedSmsTitle;
+
+  /// No description provided for @confirmedBySms.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed by SMS'**
+  String get confirmedBySms;
+
+  /// No description provided for @batteryRestricted.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow USSD Pay to run in the background (Battery: No restrictions), so SMS confirmation works while you are in the dialer.'**
+  String get batteryRestricted;
+
+  /// No description provided for @batteryOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get batteryOpen;
 }
 
 class _AppLocalizationsDelegate

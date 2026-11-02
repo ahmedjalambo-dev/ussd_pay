@@ -37,6 +37,37 @@ class _Favorites extends FavoritesNotifier {
 /// The steps by index, so the expectations read as the tour does.
 const _wallet = 0, _phone = 1, _amount = 2, _review = 3, _back = 4, _pin = 5;
 const _favorites = 6, _history = 7, _settings = 8;
+const _confirmSms = 9, _confirmAsk = 10, _replay = 11;
+
+/// Walks a started tour to the Settings gear (step 9).
+void _toSettingsGear(TourController tour) {
+  tour.reconcile(mounted: {}, ready: {TourTarget.phoneField});
+  tour
+    ..next()
+    ..next()
+    ..next();
+  tour.reconcile(mounted: {}, ready: {TourTarget.homePage});
+  tour.next();
+  tour.reconcile(mounted: {}, ready: {TourTarget.favoritesPage});
+  tour.reconcile(mounted: {}, ready: {TourTarget.historyPage});
+}
+
+/// Settings, open and settled, with the SMS confirmation section shown.
+const _settingsScreen = {
+  TourTarget.settingsPage,
+  TourTarget.confirmBySms,
+  TourTarget.confirmManually,
+  TourTarget.appTourTile,
+};
+
+/// The root screen stays mounted under Settings.
+const _underSettings = {
+  TourTarget.homePage,
+  TourTarget.favoritesPage,
+  TourTarget.historyPage,
+  TourTarget.settingsButton,
+};
+const _withSettings = {..._settingsScreen, ..._underSettings};
 
 void main() {
   late _MemoryStore store;
@@ -66,13 +97,23 @@ void main() {
       TourTarget.favoritesTab,
       TourTarget.historyTab,
       TourTarget.settingsButton,
+      TourTarget.confirmBySms,
+      TourTarget.confirmManually,
+      TourTarget.appTourTile,
     ]);
     expect(
       [
         for (final (i, s) in tourSteps.indexed)
           if (s.interactive) i,
       ],
-      [_wallet, _back, _favorites, _history],
+      [_wallet, _back, _favorites, _history, _settings],
+    );
+    expect(
+      [
+        for (final (i, s) in tourSteps.indexed)
+          if (s.optional) i,
+      ],
+      [_confirmSms, _confirmAsk],
     );
   });
 
@@ -117,16 +158,13 @@ void main() {
     test('Next on the last step finishes', () {
       final c = container();
       final tour = c.read(tourProvider.notifier)..start();
-      tour.reconcile(mounted: {}, ready: {TourTarget.phoneField});
+      _toSettingsGear(tour);
+      expect(c.read(tourProvider).step, _settings);
+      tour.reconcile(mounted: _withSettings, ready: _settingsScreen);
       tour
         ..next()
-        ..next()
         ..next();
-      tour.reconcile(mounted: {}, ready: {TourTarget.homePage});
-      tour.next();
-      tour.reconcile(mounted: {}, ready: {TourTarget.favoritesPage});
-      tour.reconcile(mounted: {}, ready: {TourTarget.historyPage});
-      expect(c.read(tourProvider).step, _settings);
+      expect(c.read(tourProvider).step, _replay);
       expect(tour.isLastStep, isTrue);
 
       tour.next();
@@ -285,11 +323,62 @@ void main() {
       expect(step(), _settings);
     });
 
+    test('the gear opens Settings, which explains confirmation', () {
+      _toSettingsGear(tour);
+      expect(step(), _settings);
+      expect(tour.canGoBack, isFalse);
+
+      // Settings is still sliding in: nothing happens yet.
+      tour.reconcile(mounted: _withSettings, ready: {});
+      expect(step(), _settings);
+
+      tour.reconcile(mounted: _withSettings, ready: _settingsScreen);
+      expect(step(), _confirmSms);
+      tour.next();
+      expect(step(), _confirmAsk);
+      expect(tour.canGoBack, isTrue);
+      tour.next();
+      expect(step(), _replay);
+    });
+
+    test('without the SMS section, its steps are skipped', () {
+      _toSettingsGear(tour);
+      const noSms = {TourTarget.settingsPage, TourTarget.appTourTile};
+      const mounted = {...noSms, ..._underSettings};
+
+      // Not decided while Settings is still animating in.
+      tour.reconcile(mounted: mounted, ready: {});
+      expect(step(), _settings);
+
+      tour.reconcile(mounted: mounted, ready: noSms);
+      expect(step(), _confirmSms, reason: 'the gear tap passed first');
+      tour.reconcile(mounted: mounted, ready: noSms);
+      expect(step(), _confirmAsk);
+      tour.reconcile(mounted: mounted, ready: noSms);
+      expect(step(), _replay);
+      tour.reconcile(mounted: mounted, ready: noSms);
+      expect(step(), _replay, reason: 'the last step is not optional');
+    });
+
+    test('leaving Settings mid-explanation goes back to the gear', () {
+      _toSettingsGear(tour);
+      tour.reconcile(mounted: _withSettings, ready: _settingsScreen);
+      tour.next();
+      expect(step(), _confirmAsk);
+
+      tour.reconcile(
+        mounted: _underSettings,
+        ready: {TourTarget.historyPage, TourTarget.settingsButton},
+      );
+      expect(step(), _settings);
+    });
+
     test('proofs name the outcome of the latest interactive step', () {
       expect(tour.proofFor(_wallet), isNull);
       expect(tour.proofFor(_review), TourTarget.phoneField);
       expect(tour.proofFor(_pin), TourTarget.homePage);
       expect(tour.proofFor(_settings), TourTarget.historyPage);
+      expect(tour.proofFor(_replay), TourTarget.settingsPage);
     });
   });
 }

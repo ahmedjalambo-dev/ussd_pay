@@ -6,6 +6,8 @@ import '../models/confirmation_modes.dart';
 import '../models/wallet.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
+import '../tour/tour_anchor.dart';
+import '../tour/tour_steps.dart';
 import '../widgets/wallet_card.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -23,111 +25,135 @@ class SettingsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(
-            AppTheme.screenPadding,
-            AppTheme.gapLg,
-            AppTheme.screenPadding,
-            AppTheme.gapXl,
+        // Built in full rather than lazily: one short screen, and the app
+        // tour has to tell a tile that is further down from a section that
+        // is not shown at all.
+        child: TourAnchor(
+          target: TourTarget.settingsPage,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.screenPadding,
+              AppTheme.gapLg,
+              AppTheme.screenPadding,
+              AppTheme.gapXl,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _SectionHeader(title: l10n.language),
+                _SettingsCard(
+                  // RadioGroup, not a segmented control: it keeps the selected
+                  // state announced to screen readers, and the two labels are long
+                  // enough that a segmented row would truncate them.
+                  child: RadioGroup<String>(
+                    groupValue: localeCode,
+                    onChanged: (code) {
+                      if (code != null) notifier.setLocale(Locale(code));
+                    },
+                    child: const Column(
+                      children: [
+                        _LanguageTile(value: 'ar'),
+                        Divider(
+                          indent: AppTheme.gapLg,
+                          endIndent: AppTheme.gapLg,
+                        ),
+                        _LanguageTile(value: 'en'),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppTheme.gapXl),
+                _SectionHeader(title: l10n.appearance),
+                _SettingsCard(
+                  child: RadioGroup<ThemeMode>(
+                    groupValue: settings.themeMode,
+                    onChanged: (mode) {
+                      if (mode != null) notifier.setThemeMode(mode);
+                    },
+                    child: const Column(
+                      children: [
+                        _ThemeTile(
+                          value: ThemeMode.dark,
+                          icon: Icons.dark_mode_outlined,
+                        ),
+                        Divider(
+                          indent: AppTheme.gapLg,
+                          endIndent: AppTheme.gapLg,
+                        ),
+                        _ThemeTile(
+                          value: ThemeMode.light,
+                          icon: Icons.light_mode_outlined,
+                        ),
+                        Divider(
+                          indent: AppTheme.gapLg,
+                          endIndent: AppTheme.gapLg,
+                        ),
+                        _ThemeTile(
+                          value: ThemeMode.system,
+                          icon: Icons.brightness_auto_outlined,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const _ConfirmationSection(),
+                const SizedBox(height: AppTheme.gapXl),
+                _SectionHeader(title: l10n.data),
+                const _SettingsCard(child: _ClearHistoryTile()),
+                const SizedBox(height: AppTheme.gapXl),
+                _SectionHeader(title: l10n.help),
+                _SettingsCard(
+                  child: TourAnchor(
+                    target: TourTarget.appTourTile,
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.gapLg,
+                      ),
+                      leading: const Icon(Icons.tour_outlined, size: 24),
+                      title: Text(
+                        l10n.appTour,
+                        style: theme.textTheme.titleSmall,
+                      ),
+                      subtitle: Text(
+                        l10n.appTourSubtitle,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      // The tour runs on the main tabs, so Settings closes and
+                      // the root screen starts it.
+                      onTap: () => Navigator.of(context).pop(true),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppTheme.gapXl),
+                _SectionHeader(title: l10n.about),
+                _SettingsCard(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppTheme.gapLg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _AboutLine(
+                          icon: Icons.wifi_off_rounded,
+                          text: l10n.aboutOffline,
+                        ),
+                        const SizedBox(height: AppTheme.gapLg),
+                        _AboutLine(
+                          icon: Icons.lock_outline_rounded,
+                          text: l10n.aboutNoPin,
+                        ),
+                        const SizedBox(height: AppTheme.gapLg),
+                        Divider(
+                          color: scheme.outlineVariant.withValues(alpha: 0.5),
+                        ),
+                        const SizedBox(height: AppTheme.gapMd),
+                        Text(l10n.appTitle, style: theme.textTheme.labelSmall),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          children: [
-            _SectionHeader(title: l10n.language),
-            _SettingsCard(
-              // RadioGroup, not a segmented control: it keeps the selected
-              // state announced to screen readers, and the two labels are long
-              // enough that a segmented row would truncate them.
-              child: RadioGroup<String>(
-                groupValue: localeCode,
-                onChanged: (code) {
-                  if (code != null) notifier.setLocale(Locale(code));
-                },
-                child: const Column(
-                  children: [
-                    _LanguageTile(value: 'ar'),
-                    Divider(indent: AppTheme.gapLg, endIndent: AppTheme.gapLg),
-                    _LanguageTile(value: 'en'),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: AppTheme.gapXl),
-            _SectionHeader(title: l10n.appearance),
-            _SettingsCard(
-              child: RadioGroup<ThemeMode>(
-                groupValue: settings.themeMode,
-                onChanged: (mode) {
-                  if (mode != null) notifier.setThemeMode(mode);
-                },
-                child: const Column(
-                  children: [
-                    _ThemeTile(
-                      value: ThemeMode.dark,
-                      icon: Icons.dark_mode_outlined,
-                    ),
-                    Divider(indent: AppTheme.gapLg, endIndent: AppTheme.gapLg),
-                    _ThemeTile(
-                      value: ThemeMode.light,
-                      icon: Icons.light_mode_outlined,
-                    ),
-                    Divider(indent: AppTheme.gapLg, endIndent: AppTheme.gapLg),
-                    _ThemeTile(
-                      value: ThemeMode.system,
-                      icon: Icons.brightness_auto_outlined,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const _ConfirmationSection(),
-            const SizedBox(height: AppTheme.gapXl),
-            _SectionHeader(title: l10n.data),
-            const _SettingsCard(child: _ClearHistoryTile()),
-            const SizedBox(height: AppTheme.gapXl),
-            _SectionHeader(title: l10n.help),
-            _SettingsCard(
-              child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.gapLg,
-                ),
-                leading: const Icon(Icons.tour_outlined, size: 24),
-                title: Text(l10n.appTour, style: theme.textTheme.titleSmall),
-                subtitle: Text(
-                  l10n.appTourSubtitle,
-                  style: theme.textTheme.bodySmall,
-                ),
-                // The tour runs on the main tabs, so Settings closes and
-                // the root screen starts it.
-                onTap: () => Navigator.of(context).pop(true),
-              ),
-            ),
-            const SizedBox(height: AppTheme.gapXl),
-            _SectionHeader(title: l10n.about),
-            _SettingsCard(
-              child: Padding(
-                padding: const EdgeInsets.all(AppTheme.gapLg),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _AboutLine(
-                      icon: Icons.wifi_off_rounded,
-                      text: l10n.aboutOffline,
-                    ),
-                    const SizedBox(height: AppTheme.gapLg),
-                    _AboutLine(
-                      icon: Icons.lock_outline_rounded,
-                      text: l10n.aboutNoPin,
-                    ),
-                    const SizedBox(height: AppTheme.gapLg),
-                    Divider(
-                      color: scheme.outlineVariant.withValues(alpha: 0.5),
-                    ),
-                    const SizedBox(height: AppTheme.gapMd),
-                    Text(l10n.appTitle, style: theme.textTheme.labelSmall),
-                  ],
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -360,6 +386,8 @@ class _ConfirmationSectionState extends ConsumerState<_ConfirmationSection>
           if (i > 0) const SizedBox(height: AppTheme.gapMd),
           _SettingsCard(
             child: _WalletConfirmationTiles(
+              // The tour explains the switches on the first wallet only.
+              tourAnchored: i == 0,
               wallet: wallet,
               walletName: wallet.nameFor(localeCode),
               modes: settings.modesFor(wallet.id),
@@ -384,6 +412,7 @@ class _ConfirmationSectionState extends ConsumerState<_ConfirmationSection>
 
 class _WalletConfirmationTiles extends StatelessWidget {
   const _WalletConfirmationTiles({
+    required this.tourAnchored,
     required this.wallet,
     required this.walletName,
     required this.modes,
@@ -395,6 +424,7 @@ class _WalletConfirmationTiles extends StatelessWidget {
     required this.onOpenBattery,
   });
 
+  final bool tourAnchored;
   final Wallet wallet;
   final String walletName;
   final ConfirmationModes modes;
@@ -404,6 +434,9 @@ class _WalletConfirmationTiles extends StatelessWidget {
   final ValueChanged<bool> onManualChanged;
   final VoidCallback onGrantAccess;
   final VoidCallback onOpenBattery;
+
+  Widget _anchor(TourTarget target, Widget child) =>
+      tourAnchored ? TourAnchor(target: target, child: child) : child;
 
   @override
   Widget build(BuildContext context) {
@@ -438,15 +471,18 @@ class _WalletConfirmationTiles extends StatelessWidget {
         ),
         // The switch that is the last one on is disabled rather than allowed
         // to turn off: with neither, a payment could never leave Cancelled.
-        SwitchListTile(
-          contentPadding: tilePadding,
-          value: modes.sms,
-          onChanged: modes.sms && !modes.manual ? null : onSmsChanged,
-          secondary: const Icon(Icons.mark_chat_read_outlined, size: 24),
-          title: Text(l10n.confirmBySms, style: theme.textTheme.titleSmall),
-          subtitle: Text(
-            l10n.confirmBySmsSubtitle(walletName),
-            style: theme.textTheme.bodySmall,
+        _anchor(
+          TourTarget.confirmBySms,
+          SwitchListTile(
+            contentPadding: tilePadding,
+            value: modes.sms,
+            onChanged: modes.sms && !modes.manual ? null : onSmsChanged,
+            secondary: const Icon(Icons.mark_chat_read_outlined, size: 24),
+            title: Text(l10n.confirmBySms, style: theme.textTheme.titleSmall),
+            subtitle: Text(
+              l10n.confirmBySmsSubtitle(walletName),
+              style: theme.textTheme.bodySmall,
+            ),
           ),
         ),
         if (modes.sms && accessMissing)
@@ -466,17 +502,23 @@ class _WalletConfirmationTiles extends StatelessWidget {
             color: scheme.tertiary,
           ),
         const Divider(indent: AppTheme.gapLg, endIndent: AppTheme.gapLg),
-        SwitchListTile(
-          contentPadding: tilePadding,
-          value: modes.manual,
-          onChanged: modes.manual && !modes.sms ? null : onManualChanged,
-          secondary: const Icon(Icons.touch_app_outlined, size: 24),
-          title: Text(l10n.confirmManually, style: theme.textTheme.titleSmall),
-          subtitle: Text(
-            modes.sms
-                ? l10n.confirmManuallyFallbackSubtitle
-                : l10n.confirmManuallySubtitle,
-            style: theme.textTheme.bodySmall,
+        _anchor(
+          TourTarget.confirmManually,
+          SwitchListTile(
+            contentPadding: tilePadding,
+            value: modes.manual,
+            onChanged: modes.manual && !modes.sms ? null : onManualChanged,
+            secondary: const Icon(Icons.touch_app_outlined, size: 24),
+            title: Text(
+              l10n.confirmManually,
+              style: theme.textTheme.titleSmall,
+            ),
+            subtitle: Text(
+              modes.sms
+                  ? l10n.confirmManuallyFallbackSubtitle
+                  : l10n.confirmManuallySubtitle,
+              style: theme.textTheme.bodySmall,
+            ),
           ),
         ),
       ],

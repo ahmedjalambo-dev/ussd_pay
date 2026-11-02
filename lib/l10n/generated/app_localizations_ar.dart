@@ -516,7 +516,27 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tourSettingsBody =>
-      'اللغة والمظهر والتأكيد عبر الرسائل هنا. يمكنك إعادة هذه الجولة من الإعدادات في أي وقت.';
+      'اللغة والمظهر وطريقة تأكيد دفعاتك. اضغط على الإعدادات.';
+
+  @override
+  String get tourConfirmSmsTitle => 'التأكيد من رسالة المحفظة';
+
+  @override
+  String get tourConfirmSmsBody =>
+      'تبقى الدفعة ملغاة حتى تتأكد. عند تفعيل هذا الخيار، تؤكدها رسالة «تم الإرسال» من المحفظة نفسها وأنت ما زلت في شاشة الاتصال. يحتاج إلى صلاحية الوصول إلى الإشعارات، ولا تُخزَّن أي رسالة.';
+
+  @override
+  String get tourConfirmAskTitle => 'إشعار تمّت / إلغاء';
+
+  @override
+  String get tourConfirmAskBody =>
+      'بعد فتح شاشة الاتصال، يسألك إشعار «هل تمّت الدفعة؟». أجب عليه من شريط الإشعارات دون العودة إلى التطبيق. يبقى صامتاً أثناء قراءتك لشاشة USSD، ولا يظهر إلا بعد ابتعادك قليلاً. أبقِ أحد الخيارين على الأقل مفعّلاً.';
+
+  @override
+  String get tourReplayTitle => 'شاهد الجولة مجدداً';
+
+  @override
+  String get tourReplayBody => 'عد إلى هنا في أي وقت لإعادة الجولة.';
 
   @override
   String get help => 'المساعدة';

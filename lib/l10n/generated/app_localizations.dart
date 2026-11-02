@@ -981,8 +981,44 @@ abstract class AppLocalizations {
   /// No description provided for @tourSettingsBody.
   ///
   /// In en, this message translates to:
-  /// **'Language, theme and SMS confirmation are here. You can replay this tour from Settings any time.'**
+  /// **'Language, theme, and how your payments are confirmed. Tap Settings.'**
   String get tourSettingsBody;
+
+  /// No description provided for @tourConfirmSmsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed by the wallet\'s SMS'**
+  String get tourConfirmSmsTitle;
+
+  /// No description provided for @tourConfirmSmsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A payment stays Cancelled until it is confirmed. With this on, the wallet\'s own \"money sent\" SMS confirms it for you while you are still in the dialer. It needs notification access, and no SMS is stored.'**
+  String get tourConfirmSmsBody;
+
+  /// No description provided for @tourConfirmAskTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The Done / Cancel notification'**
+  String get tourConfirmAskTitle;
+
+  /// No description provided for @tourConfirmAskBody.
+  ///
+  /// In en, this message translates to:
+  /// **'After you open the dialer, a notification asks \"Did the payment go through?\". Answer it from the pulldown without coming back. It stays silent while you read the USSD screen, and pops up only after you have been away for a while. Keep at least one of the two on.'**
+  String get tourConfirmAskBody;
+
+  /// No description provided for @tourReplayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'See this tour again'**
+  String get tourReplayTitle;
+
+  /// No description provided for @tourReplayBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Come back here any time to replay the tour.'**
+  String get tourReplayBody;
 
   /// No description provided for @help.
   ///

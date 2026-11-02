@@ -136,6 +136,8 @@ class TourController extends Notifier<TourState> {
   ///
   /// - An interactive step is passed once its outcome is ready, however the
   ///   user got there.
+  /// - An optional step whose target is missing from its settled screen is
+  ///   skipped.
   /// - If what an earlier interactive step achieved has been undone -- the
   ///   payment form closed by the system back gesture mid-explanation, or
   ///   a notification answer popped to the root -- the tour steps back to
@@ -150,8 +152,18 @@ class TourController extends Notifier<TourState> {
     final index = state.step;
     if (index == null) return;
 
-    final reached = steps[index].advanceWhenReady;
-    if (reached != null && ready.contains(reached)) {
+    final step = steps[index];
+    final reached = step.advanceWhenReady;
+    final proof = proofFor(index);
+
+    // Passed by the user's tap, or (optional step) not there to explain:
+    // its screen is open and settled, and the target is not built.
+    final passed = reached != null && ready.contains(reached);
+    final absent =
+        step.optional &&
+        !mounted.contains(step.target) &&
+        (proof == null || ready.contains(proof));
+    if (passed || absent) {
       if (index == steps.length - 1) {
         finish();
       } else {
@@ -160,7 +172,6 @@ class TourController extends Notifier<TourState> {
       return;
     }
 
-    final proof = proofFor(index);
     if (proof != null && !mounted.contains(proof)) {
       for (var i = index - 1; i >= 0; i--) {
         if (steps[i].advanceWhenReady == proof) {

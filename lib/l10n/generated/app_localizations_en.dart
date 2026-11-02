@@ -516,7 +516,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tourSettingsBody =>
-      'Language, theme and SMS confirmation are here. You can replay this tour from Settings any time.';
+      'Language, theme, and how your payments are confirmed. Tap Settings.';
+
+  @override
+  String get tourConfirmSmsTitle => 'Confirmed by the wallet\'s SMS';
+
+  @override
+  String get tourConfirmSmsBody =>
+      'A payment stays Cancelled until it is confirmed. With this on, the wallet\'s own \"money sent\" SMS confirms it for you while you are still in the dialer. It needs notification access, and no SMS is stored.';
+
+  @override
+  String get tourConfirmAskTitle => 'The Done / Cancel notification';
+
+  @override
+  String get tourConfirmAskBody =>
+      'After you open the dialer, a notification asks \"Did the payment go through?\". Answer it from the pulldown without coming back. It stays silent while you read the USSD screen, and pops up only after you have been away for a while. Keep at least one of the two on.';
+
+  @override
+  String get tourReplayTitle => 'See this tour again';
+
+  @override
+  String get tourReplayBody => 'Come back here any time to replay the tour.';
 
   @override
   String get help => 'Help';

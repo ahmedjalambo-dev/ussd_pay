@@ -49,11 +49,13 @@ class _Favorites extends FavoritesNotifier {
   List<Favorite> build() => const [];
 }
 
-/// Off Android, so Settings shows no confirmation section and calls no
-/// platform channel.
-class _NoSms implements SmsNotificationSource {
+/// No platform channel. Unsupported (off Android), Settings shows no
+/// payment-confirmation section.
+class _Sms implements SmsNotificationSource {
+  _Sms({required this.supported});
+  final bool supported;
   @override
-  bool get isSupported => false;
+  bool get isSupported => supported;
   @override
   Future<bool> isAccessGranted() async => false;
   @override
@@ -70,14 +72,18 @@ class _NoSms implements SmsNotificationSource {
   Stream<SmsNotification> get notifications => const Stream.empty();
 }
 
-const _wallets = [
+final _wallets = [
   Wallet(
     id: 'jawwalpay',
-    names: {'en': 'JawwalPay', 'ar': 'جوال باي'},
+    names: const {'en': 'JawwalPay', 'ar': 'جوال باي'},
     colorValue: 0xFF6CA61C,
-    templates: {'friend': '*268*1*{phone}*{amount}#'},
+    templates: const {'friend': '*268*1*{phone}*{amount}#'},
+    smsConfirmation: SmsConfirmationConfig(
+      senders: const ['Jawwal Pay'],
+      sentPatterns: [RegExp('(?<amount>1)(?<party>2)')],
+    ),
   ),
-  Wallet(
+  const Wallet(
     id: 'palpay',
     names: {'en': 'PalPay', 'ar': 'بال باي'},
     colorValue: 0xFF6A1B9A,
@@ -105,6 +111,7 @@ void main() {
     List<HistoryEntry> history = const [],
     Future<List<Wallet>> Function()? wallets,
     bool settle = true,
+    bool sms = true,
   }) async {
     // A common phone (412 x 915 dp), so the tour is laid out as on a device.
     tester.view.physicalSize = const Size(1236, 2745);
@@ -118,7 +125,7 @@ void main() {
           settingsProvider.overrideWith(() => _Settings(locale)),
           historyProvider.overrideWith(() => _History(history)),
           favoritesProvider.overrideWith(_Favorites.new),
-          smsNotificationSourceProvider.overrideWithValue(_NoSms()),
+          smsNotificationSourceProvider.overrideWithValue(_Sms(supported: sms)),
           walletsProvider.overrideWith(
             (ref) => wallets?.call() ?? Future.value(_wallets),
           ),
@@ -157,7 +164,7 @@ void main() {
     await pump(tester);
 
     // 1. Auto-started for a new user, on the first wallet.
-    expect(inTooltip('Step 1 of 9'), findsOneWidget);
+    expect(inTooltip('Step 1 of 12'), findsOneWidget);
     expect(inTooltip('Start with a wallet'), findsOneWidget);
     expect(inTooltip('Tap the highlighted item to continue'), findsOneWidget);
     expect(inTooltip('Next'), findsNothing, reason: 'a tap step has no Next');
@@ -198,7 +205,7 @@ void main() {
 
     // 6. The PIN notice, back on the Pay tab.
     expect(inTooltip('Your PIN stays yours'), findsOneWidget);
-    expect(inTooltip('Step 6 of 9'), findsOneWidget);
+    expect(inTooltip('Step 6 of 12'), findsOneWidget);
     await tapAndSettle(tester, inTooltip('Next'));
 
     // 7-8. The real tabs.
@@ -211,16 +218,87 @@ void main() {
     await tapAndSettle(tester, navItem('History'));
     expect(find.byType(HistoryScreen), findsOneWidget);
 
-    // 9. Settings, and done.
-    expect(inTooltip('Step 9 of 9'), findsOneWidget);
+    // 9. The real Settings gear.
+    expect(inTooltip('Step 9 of 12'), findsOneWidget);
+    expect(inTooltip('Next'), findsNothing);
+    await tapAndSettle(tester, find.byTooltip('Settings'));
+    expect(find.byType(SettingsScreen), findsOneWidget);
+
+    // 10-11. How a payment gets confirmed.
+    expect(inTooltip("Confirmed by the wallet's SMS"), findsOneWidget);
+    // Explained, not toggled: the spotlight absorbs the switch.
+    final smsSwitch = find.widgetWithText(SwitchListTile, 'Confirm by SMS');
+    final before = tester.widget<SwitchListTile>(smsSwitch).value;
+    await tapAndSettle(tester, smsSwitch);
+    expect(tester.widget<SwitchListTile>(smsSwitch).value, before);
+    expect(find.byType(AlertDialog), findsNothing);
+
+    await tapAndSettle(tester, inTooltip('Next'));
+    expect(inTooltip('The Done / Cancel notification'), findsOneWidget);
+    await tapAndSettle(tester, inTooltip('Back'));
+    expect(inTooltip("Confirmed by the wallet's SMS"), findsOneWidget);
+    await tapAndSettle(tester, inTooltip('Next'));
+    await tapAndSettle(tester, inTooltip('Next'));
+
+    // 12. Where to replay it, and done.
+    expect(inTooltip('See this tour again'), findsOneWidget);
+    expect(inTooltip('Step 12 of 12'), findsOneWidget);
     expect(store.status, TourStatus.notStarted, reason: 'not done yet');
     await tapAndSettle(tester, inTooltip('Finish'));
     expect(tooltip(), findsNothing);
     expect(store.status, TourStatus.completed);
 
-    // The app is back to normal.
-    await tapAndSettle(tester, find.byTooltip('Settings'));
+    // The app is back to normal, still on Settings.
     expect(find.byType(SettingsScreen), findsOneWidget);
+    await tapAndSettle(tester, find.byType(BackButton));
+    expect(find.byType(SettingsScreen), findsNothing);
+  });
+
+  testWidgets('without SMS confirmation, Settings skips straight on', (
+    tester,
+  ) async {
+    await pump(tester, sms: false);
+    await tapAndSettle(tester, inTooltip('Skip tour'));
+    store.status = TourStatus.notStarted;
+
+    // Replay, and walk to the gear.
+    await tapAndSettle(tester, find.byTooltip('Settings'));
+    await tester.scrollUntilVisible(find.text('App tour'), 200);
+    await tapAndSettle(tester, find.text('App tour'));
+    await tapAndSettle(tester, find.byType(WalletCard).first);
+    for (var i = 0; i < 3; i++) {
+      await tapAndSettle(tester, inTooltip('Next'));
+    }
+    await tapAndSettle(tester, find.byType(BackButton));
+    await tapAndSettle(tester, inTooltip('Next'));
+    await tapAndSettle(tester, navItem('Favorites'));
+    await tapAndSettle(tester, navItem('History'));
+    await tapAndSettle(tester, find.byTooltip('Settings'));
+
+    expect(find.text('Confirm by SMS'), findsNothing);
+    expect(inTooltip('See this tour again'), findsOneWidget);
+    await tapAndSettle(tester, inTooltip('Finish'));
+    expect(store.status, TourStatus.completed);
+  });
+
+  testWidgets('system back on Settings rewinds to the gear', (tester) async {
+    await pump(tester);
+    await tapAndSettle(tester, find.byType(WalletCard).first);
+    for (var i = 0; i < 3; i++) {
+      await tapAndSettle(tester, inTooltip('Next'));
+    }
+    await tapAndSettle(tester, find.byType(BackButton));
+    await tapAndSettle(tester, inTooltip('Next'));
+    await tapAndSettle(tester, navItem('Favorites'));
+    await tapAndSettle(tester, navItem('History'));
+    await tapAndSettle(tester, find.byTooltip('Settings'));
+    expect(inTooltip("Confirmed by the wallet's SMS"), findsOneWidget);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SettingsScreen), findsNothing);
+    expect(inTooltip('Settings'), findsOneWidget);
   });
 
   testWidgets('Skip ends it for good and frees the app', (tester) async {

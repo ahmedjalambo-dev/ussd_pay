@@ -1,0 +1,174 @@
+{
+  "@@locale": "ar",
+
+  "appTitle": "USSD Pay",
+  "chooseWallet": "اختر المحفظة",
+  "chooseWalletSubtitle": "اختر المحفظة التي ستدفع منها.",
+  "navHome": "ادفع",
+  "navFavorites": "المفضلة",
+  "navHistory": "السجل",
+  "settings": "الإعدادات",
+
+  "recipientTypeQuestion": "لمن تدفع؟",
+  "recipientTypeFriend": "صديق",
+  "recipientTypeMerchant": "تاجر",
+
+  "phoneNumberLabel": "رقم الهاتف",
+  "phoneNumberHint": "059 912 3456",
+  "phoneSupportedPrefixes": "جوال 059 · أوريدو 056",
+  "amountLabel": "المبلغ",
+  "currencySymbol": "₪",
+  "pickFromContacts": "جهات الاتصال",
+  "pickFromFavorites": "المفضلة",
+
+  "reviewPayment": "مراجعة الدفعة",
+  "reviewPaymentHint": "لم يُرسل شيء بعد — ستراجع التفاصيل أولاً.",
+  "confirmTitle": "تأكيد الدفعة",
+  "confirmSubtitle": "تحقق من كل التفاصيل قبل الاتصال. هذه أموال حقيقية.",
+  "walletLabel": "المحفظة",
+  "recipientLabel": "المستلم",
+  "codeLabel": "الكود الذي سيتم طلبه",
+  "callNow": "فتح شاشة الاتصال",
+  "cancel": "إلغاء",
+  "done": "تم",
+  "back": "رجوع",
+  "notesLabel": "ملاحظات (اختياري)",
+  "notesHint": "مثلاً: إيجار حزيران",
+
+  "notifPaymentDecisionTitle": "هل تمّت الدفعة؟",
+  "notifPaymentDecisionBody": "{wallet}: {amount} {currency}",
+  "@notifPaymentDecisionBody": {
+    "placeholders": {
+      "wallet": { "type": "String" },
+      "amount": { "type": "String" },
+      "currency": { "type": "String" }
+    }
+  },
+  "notifActionDone": "نعم، تمّت",
+  "notifActionCancel": "لا، ألغِ",
+  "copyCode": "نسخ الكود",
+  "codeCopied": "تم نسخ الكود",
+  "pinNotice": "ستدخل الرقم السري لمحفظتك في شاشة شركة الاتصالات نفسها بعد الطلب. تطبيق USSD Pay لا يطلبه ولا يخزّنه أبداً.",
+
+  "warnUnknownPrefix": "هذا الرقم ليس جوال (059) ولا أوريدو (056). تأكد منه قبل المتابعة — يمكنك الدفع على أي حال.",
+  "errorPhoneEmpty": "أدخل رقم الهاتف",
+  "errorPhoneNonNumeric": "لا يحتوي هذا على رقم هاتف",
+  "errorPhoneTooShort": "الرقم قصير — يتكوّن من ٩ خانات تبدأ بـ 059 أو 056",
+  "errorPhoneTooLong": "الرقم طويل — يتكوّن من ٩ خانات تبدأ بـ 059 أو 056",
+  "errorAmountRequired": "أدخل المبلغ",
+
+  "carrierJawwal": "جوال",
+  "carrierOoredoo": "أوريدو",
+
+  "dialerUnavailable": "هذا الجهاز لا يستطيع طلب أكواد USSD. تم نسخ الكود — الصقه في شاشة الاتصال.",
+  "dialerOpened": "اضغط زر الاتصال في شاشة الطلب لإتمام الدفعة",
+
+  "emptyFavoritesTitle": "لا يوجد مستلمون محفوظون",
+  "emptyFavoritesBody": "احفظ من تدفع له كثيراً ليصبح رقمه على بعد ضغطة واحدة.",
+  "emptyHistoryTitle": "لا توجد دفعات بعد",
+  "emptyHistoryBody": "ستظهر هنا الدفعات التي طلبتها لتتمكن من تكرارها.",
+
+  "saveAsFavorite": "حفظ في المفضلة",
+  "savedAsFavorite": "تم الحفظ",
+  "favoriteNameLabel": "الاسم",
+  "save": "حفظ",
+  "delete": "حذف",
+  "edit": "تعديل",
+  "recipientTypeSection": "نوع المستلم",
+  "addFavorite": "إضافة مفضلة",
+  "editFavorite": "تعديل المفضلة",
+  "favoriteUpdated": "تم تحديث المفضلة",
+  "favoriteAlreadyExists": "هذا الرقم محفوظ مسبقاً باسم {name}",
+  "@favoriteAlreadyExists": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "favoritesDeleted": "{count, plural, =1{تم حذف مستلم واحد} =2{تم حذف مستلمَين} other{تم حذف {count} مستلمين}}",
+  "@favoritesDeleted": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "repeatPayment": "تكرار",
+  "clearHistory": "مسح السجل",
+  "clearHistoryMessage": "سيتم حذف كل الدفعات المسجلة، المكتملة والملغاة، من هذا الجهاز.",
+  "clear": "مسح",
+  "historyTabDone": "مكتملة ({count})",
+  "historyTabCancelled": "ملغاة ({count})",
+  "emptyDoneTitle": "لا توجد دفعات مكتملة",
+  "emptyDoneBody": "ستظهر هنا الدفعات التي تؤكد إتمامها.",
+  "emptyCancelledTitle": "لا توجد دفعات ملغاة",
+  "emptyCancelledBody": "ستظهر هنا الدفعات التي ألغيتها أو لم تؤكدها.",
+  "historyEntriesDeleted": "{count, plural, =1{تم حذف دفعة واحدة} =2{تم حذف دفعتين} other{تم حذف {count} دفعات}}",
+  "@historyEntriesDeleted": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "selectedCount": "تم تحديد {count}",
+  "@selectedCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "selectAll": "تحديد الكل",
+  "cancelSelection": "إلغاء التحديد",
+  "paymentDetails": "تفاصيل الدفعة",
+  "data": "البيانات",
+  "historyCleared": "تم مسح السجل",
+  "undo": "تراجع",
+
+  "language": "اللغة",
+  "languageArabic": "العربية",
+  "languageEnglish": "English",
+  "appearance": "المظهر",
+  "themeDark": "داكن",
+  "themeLight": "فاتح",
+  "themeSystem": "حسب النظام",
+
+  "about": "عن التطبيق",
+  "aboutOffline": "يعمل USSD Pay بدون إنترنت تماماً. لا يجري أي اتصال بالشبكة ولا يجمع أي بيانات.",
+  "aboutNoPin": "لا يطلب الرقم السري لمحفظتك ولا يخزّنه ولا يرسله ضمن الكود.",
+
+  "contactsPermissionDenied": "لم يتم منح إذن قراءة جهات الاتصال. يمكنك كتابة الرقم يدوياً.",
+  "contactHasNoNumber": "جهة الاتصال هذه ليس لها رقم هاتف.",
+
+  "loadFailedTitle": "تعذّرت قراءة إعدادات المحافظ",
+  "loadFailedBody": "الملف assets/wallets.json مفقود أو غير صالح، لذا لا يمكن بناء أي دفعة بأمان.",
+  "retry": "إعادة المحاولة",
+
+  "confirmationSection": "تأكيد الدفع",
+  "confirmBySms": "التأكيد عبر الرسائل",
+  "confirmBySmsSubtitle": "اعتبار الدفعة مكتملة عند وصول رسالة {wallet}",
+  "@confirmBySmsSubtitle": {
+    "placeholders": { "wallet": { "type": "String" } }
+  },
+  "confirmManually": "اسألني (تمّت / إلغاء)",
+  "confirmManuallySubtitle": "السؤال بعد فتح شاشة الاتصال",
+  "confirmManuallyFallbackSubtitle": "السؤال إذا لم تصل رسالة خلال 3 دقائق",
+  "smsAccessTitle": "السماح بالوصول للإشعارات",
+  "smsAccessBody": "لتأكيد الدفعات عبر الرسائل، يحتاج USSD Pay إلى الوصول للإشعارات. يقرأ فقط رسائل {wallet}، ولمدة 5 دقائق فقط بعد الدفع، ولا يحفظها ولا يرسلها لأي جهة.\n\nفي الشاشة التالية، فعّل USSD Pay.",
+  "@smsAccessBody": {
+    "placeholders": { "wallet": { "type": "String" } }
+  },
+  "smsAccessOpenSettings": "فتح الإعدادات",
+  "smsAccessMissing": "الوصول للإشعارات متوقف، لذلك سيتم سؤالك لتأكيد الدفعات.",
+  "smsAccessGrant": "السماح",
+  "notifWaitingSmsTitle": "بانتظار رسالة التأكيد…",
+  "notifConfirmedSmsTitle": "تم تأكيد الدفعة عبر الرسالة",
+  "confirmedBySms": "تم التأكيد عبر الرسالة",
+  "batteryRestricted": "اسمح لـ USSD Pay بالعمل في الخلفية (البطارية: بلا قيود)، ليعمل التأكيد عبر الرسائل وأنت في شاشة الاتصال.",
+  "batteryOpen": "فتح",
+
+  "prevAttemptSameTitle": "لقد بدأت هذه الدفعة مسبقاً",
+  "prevAttemptSameBody": "فتحت شاشة الاتصال لها عند {time}. إذا تمّت، فإن الاتصال مرة أخرى سيدفع المبلغ مرتين.",
+  "@prevAttemptSameBody": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "prevAttemptOtherTitle": "هل تمّت دفعتك السابقة؟",
+  "prevAttemptOtherBody": "بدأت عند {time}. أجب قبل أن تحلّ الدفعة الجديدة محل سؤالها.",
+  "@prevAttemptOtherBody": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "prevAttemptWentThrough": "نعم، تمّت",
+  "prevAttemptTryAgain": "لا، حاول مجدداً",
+  "prevAttemptNo": "لا، لم تتم",
+
+  "cancelPaymentTitle": "إلغاء هذه الدفعة؟",
+  "cancelPaymentBody": "سيتم تسجيلها كدفعة ملغاة (لم تُرسل). افعل ذلك فقط إذا فشلت الدفعة أو أوقفتها.",
+  "cancelPaymentStay": "إبقاء",
+  "cancelPaymentConfirm": "نعم، ألغِ"
+}

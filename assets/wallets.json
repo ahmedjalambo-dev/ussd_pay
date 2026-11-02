@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "_comment": "USSD templates live here as DATA. To add a wallet or fix a carrier code, edit this file only -- no Dart code names a specific wallet. Placeholders are {phone} and {amount}. {phone} is substituted with the 10-digit local form (0599123456). NEVER add a PIN placeholder: the PIN is entered in the carrier's own USSD prompt, never in the dialed string.",
+  "wallets": [
+    {
+      "id": "jawwalpay",
+      "name": {
+        "ar": "جوال باي",
+        "en": "JawwalPay"
+      },
+      "colorHex": "#6CA61C",
+      "icon": "assets/images/JawwalPay.png",
+      "templates": {
+        "friend": "*268*1*{phone}*{amount}#",
+        "merchant": "*268*2*{phone}*{amount}#"
+      },
+      "smsConfirmation": {
+        "_comment": "Matched against the SMS notification after Arabic-Indic digits are folded to ASCII and whitespace is collapsed. Both named groups are required. Only SENT messages may match: a receive SMS (\"استلمت مبلغ ...\") must never confirm a payment.",
+        "senders": ["Jawwal Pay", "JawwalPay"],
+        "sentPatterns": [
+          "تم تحويل ILS (?<amount>[0-9.,]+) [اإ]لى (?<party>.+?) رصيدك"
+        ]
+      }
+    },
+    {
+      "id": "palpay",
+      "name": {
+        "ar": "بال باي",
+        "en": "PalPay"
+      },
+      "colorHex": "#63227f",
+      "icon": "assets/images/PalPay.png",
+      "templates": {
+        "friend": "*370*1*1*{phone}*{amount}#",
+        "merchant": "*370*2*{phone}*{amount}#"
+      },
+      "smsConfirmation": {
+        "_comment": "\"لصديق ل \" is a send; \"لصديق من \" is a receive and must not match.",
+        "senders": ["PALPAY", "PalPay"],
+        "sentPatterns": [
+          "حركة دفع لصديق ل (?<party>.+?) بمبلغ (?<amount>[0-9.,]+) شيكل"
+        ]
+      }
+    }
+  ]
+}

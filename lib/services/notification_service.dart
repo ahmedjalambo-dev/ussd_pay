@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -15,6 +16,11 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 ///
 /// Nothing here is I/O beyond the platform channel. No network calls; no
 /// state persisted outside the notification the OS itself is drawing.
+///
+/// Every notification uses `ic_stat_ussd_pay` as its small icon, never the
+/// launcher icon: Android draws small icons from the alpha channel only, and
+/// the opaque launcher icon came out as a blank circle. See
+/// tool/generate_icons.py.
 class NotificationService {
   NotificationService._(this._plugin);
 
@@ -54,7 +60,11 @@ class NotificationService {
   static Future<NotificationService> init() async {
     final plugin = FlutterLocalNotificationsPlugin();
 
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    // The default small icon for every notification, including the plugin's
+    // foreground-service one. Kept from resource shrinking by res/raw/keep.xml.
+    const androidInit = AndroidInitializationSettings(
+      '@drawable/ic_stat_ussd_pay',
+    );
     const initSettings = InitializationSettings(android: androidInit);
 
     final service = NotificationService._(plugin);
@@ -113,6 +123,7 @@ class NotificationService {
     required String cancelLabel,
     bool keepAwake = false,
     bool quiet = false,
+    PromptStyle? style,
   }) async {
     final androidDetails = AndroidNotificationDetails(
       quiet ? _quietChannelId : _channelId,
@@ -129,6 +140,8 @@ class NotificationService {
       ongoing: true,
       autoCancel: false,
       category: AndroidNotificationCategory.status,
+      color: style?.accent,
+      largeIcon: style?._largeIcon,
       // No sound or vibration: this fires right after the user just tapped
       // a button in-app; buzzing them would be noise.
       playSound: false,
@@ -192,11 +205,12 @@ class NotificationService {
     required String historyEntryId,
     required String title,
     required String body,
+    PromptStyle? style,
   }) => _startWaitService(
     title: title,
     body: body,
     historyEntryId: historyEntryId,
-    details: const AndroidNotificationDetails(
+    details: AndroidNotificationDetails(
       _quietChannelId,
       _quietChannelName,
       channelDescription: _quietChannelDescription,
@@ -205,6 +219,8 @@ class NotificationService {
       ongoing: true,
       autoCancel: false,
       category: AndroidNotificationCategory.status,
+      color: style?.accent,
+      largeIcon: style?._largeIcon,
       playSound: false,
       enableVibration: false,
     ),
@@ -268,11 +284,12 @@ class NotificationService {
   Future<void> showConfirmedBySms({
     required String title,
     required String body,
+    PromptStyle? style,
   }) => _plugin.show(
     id: _notificationId,
     title: title,
     body: body,
-    notificationDetails: const NotificationDetails(
+    notificationDetails: NotificationDetails(
       android: AndroidNotificationDetails(
         _channelId,
         _channelName,
@@ -280,6 +297,8 @@ class NotificationService {
         importance: Importance.high,
         priority: Priority.high,
         category: AndroidNotificationCategory.status,
+        color: style?.accent,
+        largeIcon: style?._largeIcon,
         playSound: false,
         enableVibration: false,
         timeoutAfter: 15000,
@@ -323,6 +342,26 @@ class NotificationService {
 
   @visibleForTesting
   void debugEmit(PaymentDecisionEvent event) => _events.add(event);
+}
+
+/// How a payment's notifications are dressed: the wallet's brand colour on the
+/// small icon and action buttons, and its logo as the large icon, so the user
+/// can tell at a glance which wallet the prompt is about.
+///
+/// Both are optional: a wallet without a logo gets the plain app icon.
+@immutable
+class PromptStyle {
+  const PromptStyle({this.accent, this.largeIcon});
+
+  final Color? accent;
+
+  /// PNG bytes, already downscaled (see WalletLogoLoader).
+  final Uint8List? largeIcon;
+
+  ByteArrayAndroidBitmap? get _largeIcon {
+    final bytes = largeIcon;
+    return bytes == null ? null : ByteArrayAndroidBitmap(bytes);
+  }
 }
 
 /// Which button the user tapped on the payment-decision notification.

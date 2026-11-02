@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release builds shrink unused resources. The notification icon is only
+     named from Dart (NotificationService), never from Java/XML, so the
+     shrinker cannot see it is used and would strip it: release
+     notifications would then have no icon. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_stat_ussd_pay" />

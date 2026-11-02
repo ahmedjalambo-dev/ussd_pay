@@ -9,6 +9,7 @@ import '../models/history_entry.dart';
 import '../models/wallet.dart';
 import '../providers/app_providers.dart';
 import '../services/dialer_service.dart';
+import '../services/notification_service.dart';
 import '../services/phone_normalizer.dart';
 import '../theme/app_theme.dart';
 import '../widgets/save_favorite_dialog.dart';
@@ -82,6 +83,16 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
     );
   }
 
+  /// The wallet's colour and logo for this payment's notifications. Loaded
+  /// before the dialer hand-off, so it costs nothing once the user is in the
+  /// dialer; a missing logo just leaves the large icon out.
+  Future<PromptStyle> _promptStyle() async => PromptStyle(
+    accent: Color(widget.wallet.colorValue),
+    largeIcon: await ref
+        .read(walletLogoLoaderProvider)
+        .notificationLogo(widget.wallet),
+  );
+
   /// The ongoing Done/Cancel prompt, answered from the pulldown;
   /// PaymentDecisionListener applies the choice.
   ///
@@ -93,6 +104,7 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
     final notifications = ref.read(notificationServiceProvider);
     final scheduler = ref.read(decisionAlertSchedulerProvider);
     final body = _notificationBody(l10n);
+    final style = await _promptStyle();
 
     Future<void> post({required bool quiet}) =>
         notifications.showPaymentDecision(
@@ -102,6 +114,7 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
           doneLabel: l10n.notifActionDone,
           cancelLabel: l10n.notifActionCancel,
           quiet: quiet,
+          style: style,
         );
 
     await post(quiet: true);
@@ -268,6 +281,8 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
       return false;
     }
 
+    final style = await _promptStyle();
+
     await controller.start(
       entry: entry,
       config: smsConfig,
@@ -276,6 +291,7 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
         historyEntryId: entry.id,
         title: l10n.notifWaitingSmsTitle,
         body: body,
+        style: style,
       ),
       showManualPrompt: ({required whileWaiting}) =>
           notifications.showPaymentDecision(
@@ -285,10 +301,12 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
             doneLabel: l10n.notifActionDone,
             cancelLabel: l10n.notifActionCancel,
             keepAwake: whileWaiting,
+            style: style,
           ),
       showConfirmed: () => notifications.showConfirmedBySms(
         title: l10n.notifConfirmedSmsTitle,
         body: body,
+        style: style,
       ),
       stopWaiting: notifications.stopSmsWait,
     );

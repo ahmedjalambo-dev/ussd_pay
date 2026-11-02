@@ -1,0 +1,1038 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations_ar.dart';
+import 'app_localizations_en.dart';
+
+// ignore_for_file: type=lint
+
+/// Callers can lookup localized strings with an instance of AppLocalizations
+/// returned by `AppLocalizations.of(context)`.
+///
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'generated/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: AppLocalizations.localizationsDelegates,
+///   supportedLocales: AppLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.
+abstract class AppLocalizations {
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+
+  final String localeName;
+
+  static AppLocalizations of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
+  }
+
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
+
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
+
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('ar'),
+    Locale('en'),
+  ];
+
+  /// No description provided for @appTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'USSD Pay'**
+  String get appTitle;
+
+  /// No description provided for @chooseWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a wallet'**
+  String get chooseWallet;
+
+  /// No description provided for @chooseWalletSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the wallet you are paying from.'**
+  String get chooseWalletSubtitle;
+
+  /// No description provided for @navHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay'**
+  String get navHome;
+
+  /// No description provided for @navFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get navFavorites;
+
+  /// No description provided for @navHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get navHistory;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// No description provided for @recipientTypeQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Who are you paying?'**
+  String get recipientTypeQuestion;
+
+  /// No description provided for @recipientTypeFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'A friend'**
+  String get recipientTypeFriend;
+
+  /// No description provided for @recipientTypeMerchant.
+  ///
+  /// In en, this message translates to:
+  /// **'A merchant'**
+  String get recipientTypeMerchant;
+
+  /// No description provided for @phoneNumberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number'**
+  String get phoneNumberLabel;
+
+  /// No description provided for @phoneNumberHint.
+  ///
+  /// In en, this message translates to:
+  /// **'059 912 3456'**
+  String get phoneNumberHint;
+
+  /// No description provided for @phoneSupportedPrefixes.
+  ///
+  /// In en, this message translates to:
+  /// **'Jawwal 059 · Ooredoo 056'**
+  String get phoneSupportedPrefixes;
+
+  /// No description provided for @amountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get amountLabel;
+
+  /// No description provided for @currencySymbol.
+  ///
+  /// In en, this message translates to:
+  /// **'₪'**
+  String get currencySymbol;
+
+  /// No description provided for @pickFromContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts'**
+  String get pickFromContacts;
+
+  /// No description provided for @pickFromFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get pickFromFavorites;
+
+  /// No description provided for @reviewPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Review payment'**
+  String get reviewPayment;
+
+  /// No description provided for @reviewPaymentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is sent yet — you will check the details first.'**
+  String get reviewPaymentHint;
+
+  /// No description provided for @confirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm payment'**
+  String get confirmTitle;
+
+  /// No description provided for @confirmSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check every detail before you dial. This sends real money.'**
+  String get confirmSubtitle;
+
+  /// No description provided for @walletLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet'**
+  String get walletLabel;
+
+  /// No description provided for @recipientLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient'**
+  String get recipientLabel;
+
+  /// No description provided for @codeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Code to be dialed'**
+  String get codeLabel;
+
+  /// No description provided for @callNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Open dialer'**
+  String get callNow;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
+  /// No description provided for @back.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get back;
+
+  /// No description provided for @notesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes (optional)'**
+  String get notesLabel;
+
+  /// No description provided for @notesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Rent June'**
+  String get notesHint;
+
+  /// No description provided for @notifPaymentDecisionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Did the payment go through?'**
+  String get notifPaymentDecisionTitle;
+
+  /// No description provided for @notifPaymentDecisionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{wallet}: {amount} {currency}'**
+  String notifPaymentDecisionBody(
+    String wallet,
+    String amount,
+    String currency,
+  );
+
+  /// No description provided for @notifActionDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, done'**
+  String get notifActionDone;
+
+  /// No description provided for @notifActionCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'No, cancel'**
+  String get notifActionCancel;
+
+  /// No description provided for @copyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy code'**
+  String get copyCode;
+
+  /// No description provided for @codeCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Code copied'**
+  String get codeCopied;
+
+  /// No description provided for @pinNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'You will enter your wallet PIN in your carrier\'s own screen after dialing. USSD Pay never asks for it and never stores it.'**
+  String get pinNotice;
+
+  /// No description provided for @warnUnknownPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'This is not a Jawwal (059) or Ooredoo (056) number. Check it before you continue — you can still pay.'**
+  String get warnUnknownPrefix;
+
+  /// No description provided for @errorPhoneEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a phone number'**
+  String get errorPhoneEmpty;
+
+  /// No description provided for @errorPhoneNonNumeric.
+  ///
+  /// In en, this message translates to:
+  /// **'This does not contain a phone number'**
+  String get errorPhoneNonNumeric;
+
+  /// No description provided for @errorPhoneTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Too short — a number has 9 digits, starting 059 or 056'**
+  String get errorPhoneTooShort;
+
+  /// No description provided for @errorPhoneTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Too long — a number has 9 digits, starting 059 or 056'**
+  String get errorPhoneTooLong;
+
+  /// No description provided for @errorAmountRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount'**
+  String get errorAmountRequired;
+
+  /// No description provided for @carrierJawwal.
+  ///
+  /// In en, this message translates to:
+  /// **'Jawwal'**
+  String get carrierJawwal;
+
+  /// No description provided for @carrierOoredoo.
+  ///
+  /// In en, this message translates to:
+  /// **'Ooredoo'**
+  String get carrierOoredoo;
+
+  /// No description provided for @dialerUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This device cannot dial USSD codes. The code has been copied — paste it into your phone\'s dialer.'**
+  String get dialerUnavailable;
+
+  /// No description provided for @dialerOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Press call in your dialer to send the payment'**
+  String get dialerOpened;
+
+  /// No description provided for @emptyFavoritesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved recipients'**
+  String get emptyFavoritesTitle;
+
+  /// No description provided for @emptyFavoritesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Save someone you pay often and their number will be one tap away.'**
+  String get emptyFavoritesBody;
+
+  /// No description provided for @emptyHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No payments yet'**
+  String get emptyHistoryTitle;
+
+  /// No description provided for @emptyHistoryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments you dial will be listed here so you can repeat them.'**
+  String get emptyHistoryBody;
+
+  /// No description provided for @saveAsFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as favorite'**
+  String get saveAsFavorite;
+
+  /// No description provided for @savedAsFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get savedAsFavorite;
+
+  /// No description provided for @favoriteNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get favoriteNameLabel;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @recipientTypeSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient type'**
+  String get recipientTypeSection;
+
+  /// No description provided for @addFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Add favorite'**
+  String get addFavorite;
+
+  /// No description provided for @editFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit favorite'**
+  String get editFavorite;
+
+  /// No description provided for @favoriteUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite updated'**
+  String get favoriteUpdated;
+
+  /// No description provided for @favoriteAlreadyExists.
+  ///
+  /// In en, this message translates to:
+  /// **'This number is already saved as {name}'**
+  String favoriteAlreadyExists(String name);
+
+  /// No description provided for @favoritesDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 recipient deleted} other{{count} recipients deleted}}'**
+  String favoritesDeleted(int count);
+
+  /// No description provided for @repeatPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat'**
+  String get repeatPayment;
+
+  /// No description provided for @clearHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear history'**
+  String get clearHistory;
+
+  /// No description provided for @clearHistoryMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'All recorded payments, done and cancelled, will be deleted from this device.'**
+  String get clearHistoryMessage;
+
+  /// No description provided for @clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clear;
+
+  /// No description provided for @historyTabDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done ({count})'**
+  String historyTabDone(int count);
+
+  /// No description provided for @historyTabCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled ({count})'**
+  String historyTabCancelled(int count);
+
+  /// No description provided for @emptyDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed payments'**
+  String get emptyDoneTitle;
+
+  /// No description provided for @emptyDoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments you confirm as done will be listed here.'**
+  String get emptyDoneBody;
+
+  /// No description provided for @emptyCancelledTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No cancelled payments'**
+  String get emptyCancelledTitle;
+
+  /// No description provided for @emptyCancelledBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments you cancel or leave unanswered will be listed here.'**
+  String get emptyCancelledBody;
+
+  /// No description provided for @historyEntriesDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 payment deleted} other{{count} payments deleted}}'**
+  String historyEntriesDeleted(int count);
+
+  /// No description provided for @selectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String selectedCount(int count);
+
+  /// No description provided for @selectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get selectAll;
+
+  /// No description provided for @cancelSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel selection'**
+  String get cancelSelection;
+
+  /// No description provided for @paymentDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment details'**
+  String get paymentDetails;
+
+  /// No description provided for @data.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get data;
+
+  /// No description provided for @historyCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'History cleared'**
+  String get historyCleared;
+
+  /// No description provided for @undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
+
+  /// No description provided for @language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// No description provided for @languageArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'العربية'**
+  String get languageArabic;
+
+  /// No description provided for @languageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get languageEnglish;
+
+  /// No description provided for @appearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearance;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow system'**
+  String get themeSystem;
+
+  /// No description provided for @about.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get about;
+
+  /// No description provided for @aboutOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'USSD Pay works entirely offline. It makes no network connections and collects nothing.'**
+  String get aboutOffline;
+
+  /// No description provided for @aboutNoPin.
+  ///
+  /// In en, this message translates to:
+  /// **'It never asks for, stores, or dials your wallet PIN.'**
+  String get aboutNoPin;
+
+  /// No description provided for @contactsPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission to read contacts was not granted. You can still type the number.'**
+  String get contactsPermissionDenied;
+
+  /// No description provided for @contactHasNoNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'That contact has no phone number.'**
+  String get contactHasNoNumber;
+
+  /// No description provided for @loadFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet settings could not be read'**
+  String get loadFailedTitle;
+
+  /// No description provided for @loadFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'assets/wallets.json is missing or invalid, so no payment can be built safely.'**
+  String get loadFailedBody;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @confirmationSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment confirmation'**
+  String get confirmationSection;
+
+  /// No description provided for @confirmBySms.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm by SMS'**
+  String get confirmBySms;
+
+  /// No description provided for @confirmBySmsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark the payment done when the {wallet} SMS arrives'**
+  String confirmBySmsSubtitle(String wallet);
+
+  /// No description provided for @confirmManually.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask me (Done / Cancel)'**
+  String get confirmManually;
+
+  /// No description provided for @confirmManuallySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask after you open the dialer'**
+  String get confirmManuallySubtitle;
+
+  /// No description provided for @confirmManuallyFallbackSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask if no SMS arrives within 3 minutes'**
+  String get confirmManuallyFallbackSubtitle;
+
+  /// No description provided for @smsAccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow notification access'**
+  String get smsAccessTitle;
+
+  /// No description provided for @smsAccessBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To confirm payments by SMS, USSD Pay needs notification access. It only looks at messages from {wallet}, only for 5 minutes after you pay, and never saves or sends them anywhere.\n\nOn the next screen, turn on USSD Pay.'**
+  String smsAccessBody(String wallet);
+
+  /// No description provided for @smsAccessOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get smsAccessOpenSettings;
+
+  /// No description provided for @smsAccessMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification access is off, so payments are confirmed by asking you.'**
+  String get smsAccessMissing;
+
+  /// No description provided for @smsAccessGrant.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get smsAccessGrant;
+
+  /// No description provided for @notifWaitingSmsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the confirmation SMS…'**
+  String get notifWaitingSmsTitle;
+
+  /// No description provided for @notifConfirmedSmsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment confirmed by SMS'**
+  String get notifConfirmedSmsTitle;
+
+  /// No description provided for @confirmedBySms.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed by SMS'**
+  String get confirmedBySms;
+
+  /// No description provided for @batteryRestricted.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow USSD Pay to run in the background (Battery: No restrictions), so SMS confirmation works while you are in the dialer.'**
+  String get batteryRestricted;
+
+  /// No description provided for @batteryOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get batteryOpen;
+
+  /// No description provided for @prevAttemptSameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You already started this payment'**
+  String get prevAttemptSameTitle;
+
+  /// No description provided for @prevAttemptSameBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You opened the dialer for it at {time}. If it went through, dialing again will pay twice.'**
+  String prevAttemptSameBody(String time);
+
+  /// No description provided for @prevAttemptOtherTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Did your previous payment go through?'**
+  String get prevAttemptOtherTitle;
+
+  /// No description provided for @prevAttemptOtherBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Started at {time}. Answer before the new payment replaces its question.'**
+  String prevAttemptOtherBody(String time);
+
+  /// No description provided for @prevAttemptWentThrough.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, it went through'**
+  String get prevAttemptWentThrough;
+
+  /// No description provided for @prevAttemptTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'No, try again'**
+  String get prevAttemptTryAgain;
+
+  /// No description provided for @prevAttemptNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No, it failed'**
+  String get prevAttemptNo;
+
+  /// No description provided for @cancelPaymentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel this payment?'**
+  String get cancelPaymentTitle;
+
+  /// No description provided for @cancelPaymentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It will be recorded as cancelled (not sent). Only do this if the payment failed or you stopped it.'**
+  String get cancelPaymentBody;
+
+  /// No description provided for @cancelPaymentStay.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it'**
+  String get cancelPaymentStay;
+
+  /// No description provided for @cancelPaymentConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, cancel'**
+  String get cancelPaymentConfirm;
+
+  /// No description provided for @tourStepCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {current} of {total}'**
+  String tourStepCounter(int current, int total);
+
+  /// No description provided for @tourNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get tourNext;
+
+  /// No description provided for @tourBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get tourBack;
+
+  /// No description provided for @tourSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip tour'**
+  String get tourSkip;
+
+  /// No description provided for @tourFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get tourFinish;
+
+  /// No description provided for @tourTapToContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the highlighted item to continue'**
+  String get tourTapToContinue;
+
+  /// No description provided for @tourWalletTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with a wallet'**
+  String get tourWalletTitle;
+
+  /// No description provided for @tourWalletBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Each card is a mobile wallet. Tap this one to see how a payment is filled in. Nothing is sent during the tour.'**
+  String get tourWalletBody;
+
+  /// No description provided for @tourPhoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who you are paying'**
+  String get tourPhoneTitle;
+
+  /// No description provided for @tourPhoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Type the number in any form, or pick it from your contacts or favorites. The number that will be used appears underneath.'**
+  String get tourPhoneBody;
+
+  /// No description provided for @tourAmountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How much'**
+  String get tourAmountTitle;
+
+  /// No description provided for @tourAmountBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Type the amount, or tap a quick amount below the field.'**
+  String get tourAmountBody;
+
+  /// No description provided for @tourReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review before anything is sent'**
+  String get tourReviewTitle;
+
+  /// No description provided for @tourReviewBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Review shows you the exact USSD code. Nothing is dialed until you check it and open the dialer yourself.'**
+  String get tourReviewBody;
+
+  /// No description provided for @tourBackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to your wallets'**
+  String get tourBackTitle;
+
+  /// No description provided for @tourBackBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap back to leave this form. Your payment is never sent from here.'**
+  String get tourBackBody;
+
+  /// No description provided for @tourPinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your PIN stays yours'**
+  String get tourPinTitle;
+
+  /// No description provided for @tourPinBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You type your wallet PIN on your carrier\'s own screen. USSD Pay never asks for it, so anything that does is not us.'**
+  String get tourPinBody;
+
+  /// No description provided for @tourFavoritesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get tourFavoritesTitle;
+
+  /// No description provided for @tourFavoritesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Save people you pay often, then pay them with the number already filled in. Tap Favorites.'**
+  String get tourFavoritesBody;
+
+  /// No description provided for @tourHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get tourHistoryTitle;
+
+  /// No description provided for @tourHistoryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Every payment you hand to the dialer is listed here as done or cancelled, ready to repeat. Tap History.'**
+  String get tourHistoryBody;
+
+  /// No description provided for @tourSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get tourSettingsTitle;
+
+  /// No description provided for @tourSettingsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Language, theme and SMS confirmation are here. You can replay this tour from Settings any time.'**
+  String get tourSettingsBody;
+
+  /// No description provided for @help.
+  ///
+  /// In en, this message translates to:
+  /// **'Help'**
+  String get help;
+
+  /// No description provided for @appTour.
+  ///
+  /// In en, this message translates to:
+  /// **'App tour'**
+  String get appTour;
+
+  /// No description provided for @appTourSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay the guided tour of the app'**
+  String get appTourSubtitle;
+}
+
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  Future<AppLocalizations> load(Locale locale) {
+    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
+  }
+
+  @override
+  bool isSupported(Locale locale) =>
+      <String>['ar', 'en'].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
+}
+
+AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'ar':
+      return AppLocalizationsAr();
+    case 'en':
+      return AppLocalizationsEn();
+  }
+
+  throw FlutterError(
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
+}

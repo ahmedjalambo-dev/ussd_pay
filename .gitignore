@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# IconKitchen exports (icon-generator source; installed into
+# android/app/src/main/res/mipmap-*/).
+/IconKitchen-Output*/

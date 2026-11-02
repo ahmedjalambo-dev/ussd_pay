@@ -165,5 +165,10 @@
   },
   "prevAttemptWentThrough": "نعم، تمّت",
   "prevAttemptTryAgain": "لا، حاول مجدداً",
-  "prevAttemptNo": "لا، لم تتم"
+  "prevAttemptNo": "لا، لم تتم",
+
+  "cancelPaymentTitle": "إلغاء هذه الدفعة؟",
+  "cancelPaymentBody": "سيتم تسجيلها كدفعة ملغاة (لم تُرسل). افعل ذلك فقط إذا فشلت الدفعة أو أوقفتها.",
+  "cancelPaymentStay": "إبقاء",
+  "cancelPaymentConfirm": "نعم، ألغِ"
 }

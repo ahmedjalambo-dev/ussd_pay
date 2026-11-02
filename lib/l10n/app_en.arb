@@ -171,5 +171,10 @@
   },
   "prevAttemptWentThrough": "Yes, it went through",
   "prevAttemptTryAgain": "No, try again",
-  "prevAttemptNo": "No, it failed"
+  "prevAttemptNo": "No, it failed",
+
+  "cancelPaymentTitle": "Cancel this payment?",
+  "cancelPaymentBody": "It will be recorded as cancelled (not sent). Only do this if the payment failed or you stopped it.",
+  "cancelPaymentStay": "Keep it",
+  "cancelPaymentConfirm": "Yes, cancel"
 }

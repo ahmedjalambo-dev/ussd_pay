@@ -6,9 +6,9 @@ import 'package:ussd_pay/services/decision_alert_scheduler.dart';
 /// after the user has been away for the full delay, and only once.
 void main() {
   const delay = DecisionAlertScheduler.awayDelay;
-  const almost = Duration(milliseconds: 6999);
+  final almost = delay - const Duration(milliseconds: 1);
 
-  test('armed while away: alerts after 7 s, once', () {
+  test('armed while away: alerts after the full delay, once', () {
     fakeAsync((async) {
       final scheduler = DecisionAlertScheduler();
       var alerts = 0;
@@ -52,7 +52,7 @@ void main() {
     });
   });
 
-  test('coming back early cancels; leaving again restarts the full 7 s', () {
+  test('coming back early cancels; leaving again restarts the full delay', () {
     fakeAsync((async) {
       final scheduler = DecisionAlertScheduler();
       var alerts = 0;

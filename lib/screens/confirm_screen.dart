@@ -132,6 +132,59 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
         .setStatus(entry.id, status, confirmedBy: ConfirmationSource.user);
   }
 
+  /// Cancel (AppBar or system back).
+  ///
+  /// Before any dial there is nothing to record: just go back to the form.
+  /// After a dial whose outcome nobody answered yet, leaving means "it did not
+  /// go through" -- recorded as cancelled, after asking, since a payment that
+  /// did go through would then be listed as not sent. Either way the user
+  /// lands back on the payment form (draft kept) to fix the number or amount.
+  Future<void> _cancel() async {
+    if (_dialing) return;
+    final last = _lastEntry;
+    final entry = last == null
+        ? null
+        : ref.read(historyProvider).where((e) => e.id == last.id).firstOrNull;
+
+    // Same "unanswered" rule as the double-pay guard (lib/core/attempts.dart).
+    if (entry == null || entry.confirmedBy != null) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => Theme(
+        data: AppTheme.branded(dialogContext, Color(widget.wallet.colorValue)),
+        child: AlertDialog(
+          title: Text(l10n.cancelPaymentTitle),
+          content: Text(l10n.cancelPaymentBody),
+          actions: [
+            TextButton(
+              style: TextButton.styleFrom(
+                minimumSize: AppTheme.dialogActionSize,
+              ),
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l10n.cancelPaymentStay),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                minimumSize: AppTheme.dialogActionSize,
+              ),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(l10n.cancelPaymentConfirm),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!(confirmed ?? false) || !mounted) return;
+
+    await _settle(entry, HistoryStatus.cancelled);
+    if (mounted) Navigator.of(context).pop();
+  }
+
   /// The double-pay guard, run before every new hand-off. Returns whether to
   /// go ahead.
   ///
@@ -384,184 +437,200 @@ class _ConfirmScreenState extends ConsumerState<ConfirmScreen> {
         builder: (context) {
           final theme = Theme.of(context);
           final scheme = theme.colorScheme;
-          return Scaffold(
-            appBar: AppBar(
-              title: Text(l10n.confirmTitle),
-              actions: [
-                // The AppBar already has a default back arrow (from
-                // Navigator.push), so a second "Cancel" action just duplicated
-                // it. Done ends the payment: it marks the dialed history row
-                // as done, clears the in-progress draft and returns to the
-                // home tabs. Leaving with the back arrow instead keeps the
-                // row cancelled. Disabled while _dialing so it cannot race
-                // the history write.
-                IconButton(
-                  onPressed: _dialing
-                      ? null
-                      : () {
-                          // The user answered in-app: _settle also drops the
-                          // pulldown prompt, its pending banner and any SMS
-                          // wait, which are no longer relevant.
-                          final entry = _lastEntry;
-                          if (entry != null) {
-                            _settle(entry, HistoryStatus.done);
-                          }
-                          ref.read(paymentDraftProvider.notifier).reset();
-                          Navigator.of(context).popUntil((r) => r.isFirst);
-                        },
-                  icon: const Icon(Icons.done_rounded),
+          // No silent way out: the system back gesture runs the same Cancel
+          // logic as the AppBar button. Programmatic pops (Done, a
+          // notification answer, an SMS confirmation) are not affected.
+          return PopScope(
+            canPop: false,
+            onPopInvokedWithResult: (didPop, _) {
+              if (!didPop) _cancel();
+            },
+            child: Scaffold(
+              appBar: AppBar(
+                title: Text(l10n.confirmTitle),
+                // Cancel instead of a back arrow, so leaving after a dial is an
+                // answer ("it did not go through") rather than an ambiguous
+                // exit. Disabled while _dialing so it cannot race the history
+                // write.
+                automaticallyImplyLeading: false,
+                leading: IconButton(
+                  onPressed: _dialing ? null : _cancel,
+                  tooltip: l10n.cancel,
+                  icon: const Icon(Icons.close_rounded),
                 ),
-              ],
-            ),
-            body: SafeArea(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(
-                  AppTheme.screenPadding,
-                  AppTheme.gapMd,
-                  AppTheme.screenPadding,
-                  AppTheme.gapXl,
-                ),
-                children: [
-                  _CautionBanner(text: l10n.confirmSubtitle),
-                  const SizedBox(height: AppTheme.gapXl),
+                actions: [
+                  // Done ends the payment: it marks the dialed history row as
+                  // done, clears the in-progress draft and returns to the home
+                  // tabs. Disabled while _dialing so it cannot race the history
+                  // write.
+                  IconButton(
+                    onPressed: _dialing
+                        ? null
+                        : () {
+                            // The user answered in-app: _settle also drops the
+                            // pulldown prompt, its pending banner and any SMS
+                            // wait, which are no longer relevant.
+                            final entry = _lastEntry;
+                            if (entry != null) {
+                              _settle(entry, HistoryStatus.done);
+                            }
+                            ref.read(paymentDraftProvider.notifier).reset();
+                            Navigator.of(context).popUntil((r) => r.isFirst);
+                          },
+                    icon: const Icon(Icons.done_rounded),
+                  ),
+                ],
+              ),
+              body: SafeArea(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.screenPadding,
+                    AppTheme.gapMd,
+                    AppTheme.screenPadding,
+                    AppTheme.gapXl,
+                  ),
+                  children: [
+                    _CautionBanner(text: l10n.confirmSubtitle),
+                    const SizedBox(height: AppTheme.gapXl),
 
-                  // The amount is the largest thing on the screen: it is the detail a
-                  // hurried user is most likely to get wrong.
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.gapXl,
-                      vertical: AppTheme.gapXxl,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          scheme.primaryContainer,
-                          scheme.primaryContainer.withValues(alpha: 0.55),
+                    // The amount is the largest thing on the screen: it is the detail a
+                    // hurried user is most likely to get wrong.
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.gapXl,
+                        vertical: AppTheme.gapXxl,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            scheme.primaryContainer,
+                            scheme.primaryContainer.withValues(alpha: 0.55),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            l10n.amountLabel,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: scheme.onPrimaryContainer.withValues(
+                                alpha: 0.8,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: AppTheme.gapSm),
+                          Directionality(
+                            textDirection: TextDirection.ltr,
+                            child: Text(
+                              '${formatAmountDisplay(widget.amount)} ${l10n.currencySymbol}',
+                              style: theme.textTheme.displaySmall?.copyWith(
+                                color: scheme.onPrimaryContainer,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusXl),
                     ),
-                    child: Column(
-                      children: [
-                        Text(
-                          l10n.amountLabel,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: scheme.onPrimaryContainer.withValues(
-                              alpha: 0.8,
+                    const SizedBox(height: AppTheme.gapLg),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.gapLg,
+                        vertical: AppTheme.gapXs,
+                      ),
+                      decoration: AppTheme.surface(context),
+                      child: Column(
+                        children: [
+                          _DetailRow(
+                            icon: Icons.person_outline_rounded,
+                            label: l10n.recipientLabel,
+                            value:
+                                widget.recipientName ??
+                                formatPhoneDisplay(widget.phone.local),
+                            secondary: widget.recipientName != null
+                                ? formatPhoneDisplay(widget.phone.local)
+                                : carrierLabel(l10n, widget.phone.carrier),
+                            trailing: IconButton(
+                              onPressed: _saveFavorite,
+                              tooltip: l10n.saveAsFavorite,
+                              icon: const Icon(Icons.star_outline_rounded),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: AppTheme.gapSm),
-                        Directionality(
-                          textDirection: TextDirection.ltr,
-                          child: Text(
-                            '${formatAmountDisplay(widget.amount)} ${l10n.currencySymbol}',
-                            style: theme.textTheme.displaySmall?.copyWith(
-                              color: scheme.onPrimaryContainer,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.gapLg),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.gapLg,
-                      vertical: AppTheme.gapXs,
-                    ),
-                    decoration: AppTheme.surface(context),
-                    child: Column(
-                      children: [
-                        _DetailRow(
-                          icon: Icons.person_outline_rounded,
-                          label: l10n.recipientLabel,
-                          value:
-                              widget.recipientName ??
-                              formatPhoneDisplay(widget.phone.local),
-                          secondary: widget.recipientName != null
-                              ? formatPhoneDisplay(widget.phone.local)
-                              : carrierLabel(l10n, widget.phone.carrier),
-                          trailing: IconButton(
-                            onPressed: _saveFavorite,
-                            tooltip: l10n.saveAsFavorite,
-                            icon: const Icon(Icons.star_outline_rounded),
-                          ),
-                        ),
-                        const Divider(),
-                        _DetailRow(
-                          icon: Icons.account_balance_wallet_outlined,
-                          iconAsset: widget.wallet.iconAsset,
-                          label: l10n.walletLabel,
-                          value: widget.wallet.nameFor(localeCode),
-                          secondary: recipientTypeLabel(
-                            l10n,
-                            widget.recipientType,
-                          ),
-                          accent: Color(widget.wallet.colorValue),
-                        ),
-                        if (widget.note.trim().isNotEmpty) ...[
                           const Divider(),
                           _DetailRow(
-                            icon: Icons.notes_rounded,
-                            label: l10n.notesLabel,
-                            value: widget.note.trim(),
+                            icon: Icons.account_balance_wallet_outlined,
+                            iconAsset: widget.wallet.iconAsset,
+                            label: l10n.walletLabel,
+                            value: widget.wallet.nameFor(localeCode),
+                            secondary: recipientTypeLabel(
+                              l10n,
+                              widget.recipientType,
+                            ),
+                            accent: Color(widget.wallet.colorValue),
                           ),
+                          if (widget.note.trim().isNotEmpty) ...[
+                            const Divider(),
+                            _DetailRow(
+                              icon: Icons.notes_rounded,
+                              label: l10n.notesLabel,
+                              value: widget.note.trim(),
+                            ),
+                          ],
                         ],
+                      ),
+                    ),
+
+                    if (!widget.phone.isValid) ...[
+                      const SizedBox(height: AppTheme.gapMd),
+                      _Warning(text: l10n.warnUnknownPrefix),
+                    ],
+
+                    const SizedBox(height: AppTheme.gapXl),
+                    Text(l10n.codeLabel, style: theme.textTheme.bodySmall),
+                    const SizedBox(height: AppTheme.gapMd),
+                    UssdPreview(code: widget.ussdCode),
+                    const SizedBox(height: AppTheme.gapMd),
+                    _PinNoticeInline(text: l10n.pinNotice),
+
+                    const SizedBox(height: AppTheme.gapXxl),
+                    // Primary action beside the code utility: the user's next
+                    // move is almost always "open dialer", occasionally "copy
+                    // code" (dialer unavailable, or wanting to paste into
+                    // another app). Pairing them keeps both within reach.
+                    Row(
+                      children: [
+                        Expanded(
+                          child: FilledButton.icon(
+                            onPressed: _dialing ? null : _dial,
+                            icon: const Icon(
+                              Icons.phone_in_talk_rounded,
+                              size: 22,
+                            ),
+                            label: Text(
+                              l10n.callNow,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppTheme.gapMd),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _dialing ? null : _copyCode,
+                            icon: const Icon(Icons.copy_rounded, size: 20),
+                            label: Text(
+                              l10n.copyCode,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                  ),
-
-                  if (!widget.phone.isValid) ...[
-                    const SizedBox(height: AppTheme.gapMd),
-                    _Warning(text: l10n.warnUnknownPrefix),
+                    const SizedBox(height: AppTheme.gapSm),
                   ],
-
-                  const SizedBox(height: AppTheme.gapXl),
-                  Text(l10n.codeLabel, style: theme.textTheme.bodySmall),
-                  const SizedBox(height: AppTheme.gapMd),
-                  UssdPreview(code: widget.ussdCode),
-                  const SizedBox(height: AppTheme.gapMd),
-                  _PinNoticeInline(text: l10n.pinNotice),
-
-                  const SizedBox(height: AppTheme.gapXxl),
-                  // Primary action beside the code utility: the user's next
-                  // move is almost always "open dialer", occasionally "copy
-                  // code" (dialer unavailable, or wanting to paste into
-                  // another app). Pairing them keeps both within reach.
-                  Row(
-                    children: [
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: _dialing ? null : _dial,
-                          icon: const Icon(
-                            Icons.phone_in_talk_rounded,
-                            size: 22,
-                          ),
-                          label: Text(
-                            l10n.callNow,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppTheme.gapMd),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: _dialing ? null : _copyCode,
-                          icon: const Icon(Icons.copy_rounded, size: 20),
-                          label: Text(
-                            l10n.copyCode,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppTheme.gapSm),
-                ],
+                ),
               ),
             ),
           );

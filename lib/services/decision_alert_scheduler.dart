@@ -20,7 +20,7 @@ import 'dart:async';
 /// Pure Dart (timers only) so it is testable with fake_async; the app's
 /// lifecycle is fed in by PaymentDecisionListener.
 class DecisionAlertScheduler {
-  static const Duration awayDelay = Duration(seconds: 7);
+  static const Duration awayDelay = Duration(seconds: 20);
 
   String? _entryId;
   Future<void> Function()? _alert;

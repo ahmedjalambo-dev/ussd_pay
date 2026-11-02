@@ -815,6 +815,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No, it failed'**
   String get prevAttemptNo;
+
+  /// No description provided for @cancelPaymentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel this payment?'**
+  String get cancelPaymentTitle;
+
+  /// No description provided for @cancelPaymentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It will be recorded as cancelled (not sent). Only do this if the payment failed or you stopped it.'**
+  String get cancelPaymentBody;
+
+  /// No description provided for @cancelPaymentStay.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it'**
+  String get cancelPaymentStay;
+
+  /// No description provided for @cancelPaymentConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, cancel'**
+  String get cancelPaymentConfirm;
 }
 
 class _AppLocalizationsDelegate

@@ -421,4 +421,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get prevAttemptNo => 'لا، لم تتم';
+
+  @override
+  String get cancelPaymentTitle => 'إلغاء هذه الدفعة؟';
+
+  @override
+  String get cancelPaymentBody =>
+      'سيتم تسجيلها كدفعة ملغاة (لم تُرسل). افعل ذلك فقط إذا فشلت الدفعة أو أوقفتها.';
+
+  @override
+  String get cancelPaymentStay => 'إبقاء';
+
+  @override
+  String get cancelPaymentConfirm => 'نعم، ألغِ';
 }

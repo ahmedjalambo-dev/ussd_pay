@@ -421,4 +421,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get prevAttemptNo => 'No, it failed';
+
+  @override
+  String get cancelPaymentTitle => 'Cancel this payment?';
+
+  @override
+  String get cancelPaymentBody =>
+      'It will be recorded as cancelled (not sent). Only do this if the payment failed or you stopped it.';
+
+  @override
+  String get cancelPaymentStay => 'Keep it';
+
+  @override
+  String get cancelPaymentConfirm => 'Yes, cancel';
 }
